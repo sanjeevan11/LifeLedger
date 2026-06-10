@@ -3,41 +3,42 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#23615b">
+  <meta name="theme-color" content="#3267ff">
   <title>LifeLedger</title>
   <link rel="manifest" href="./manifest.webmanifest">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root {
       color-scheme: light;
-      --bg: #f6f4ef;
-      --panel: #fffdfa;
-      --panel-2: #ece7dc;
-      --text: #20231f;
-      --muted: #62685f;
-      --line: #d9d2c5;
-      --brand: #23615b;
-      --brand-2: #328378;
-      --accent: #d5873a;
-      --danger: #b6423c;
-      --ok: #307a49;
-      --shadow: 0 18px 50px rgba(32, 35, 31, 0.12);
+      --bg: #f7f9fc;
+      --panel: #ffffff;
+      --panel-2: #eef4ff;
+      --text: #172033;
+      --muted: #667085;
+      --line: #d9e2f2;
+      --brand: #3267ff;
+      --brand-2: #18a7a1;
+      --accent: #ff6b57;
+      --danger: #d14b5a;
+      --ok: #168a55;
+      --shadow: 0 18px 50px rgba(23, 32, 51, 0.1);
       --radius: 8px;
       --nav: 280px;
     }
 
     [data-theme="dark"] {
       color-scheme: dark;
-      --bg: #171b19;
-      --panel: #202621;
-      --panel-2: #2a312d;
-      --text: #f2f0ea;
-      --muted: #b2baae;
-      --line: #3b453f;
-      --brand: #79c9bc;
-      --brand-2: #9addd3;
-      --accent: #f2b06a;
-      --danger: #f08078;
-      --ok: #89d391;
+      --bg: #10141d;
+      --panel: #181f2b;
+      --panel-2: #222b3b;
+      --text: #f4f7fb;
+      --muted: #a8b3c6;
+      --line: #303b4f;
+      --brand: #8fb0ff;
+      --brand-2: #5dd5cf;
+      --accent: #ff9a87;
+      --danger: #ff7d8b;
+      --ok: #7bd89d;
       --shadow: 0 18px 50px rgba(0, 0, 0, 0.32);
     }
 
@@ -46,7 +47,9 @@
     body {
       margin: 0;
       font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
+      background:
+        linear-gradient(180deg, color-mix(in srgb, var(--panel-2) 55%, transparent), transparent 360px),
+        var(--bg);
       color: var(--text);
       line-height: 1.45;
     }
@@ -97,7 +100,7 @@
       display: grid;
       place-items: center;
       color: #fff;
-      background: linear-gradient(135deg, #23615b, #d5873a);
+      background: linear-gradient(135deg, var(--brand), var(--accent));
       font-weight: 900;
       box-shadow: var(--shadow);
     }
@@ -144,6 +147,36 @@
       margin-top: auto;
       color: var(--muted);
       font-size: 0.88rem;
+    }
+
+    .account-card {
+      display: grid;
+      grid-template-columns: 38px 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-2);
+      margin-bottom: 10px;
+    }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      color: #fff;
+      background: linear-gradient(135deg, var(--brand-2), var(--brand));
+      font-weight: 900;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .main {
@@ -636,6 +669,7 @@
       </div>
       <nav class="nav" id="nav"></nav>
       <div class="sidebar-footer">
+        <div id="accountStatus"></div>
         <div id="syncStatus">IndexedDB ready</div>
         <div class="muted">Works offline after first load.</div>
       </div>
@@ -658,6 +692,9 @@
       const DB_NAME = "lifeledger-db";
       const DB_VERSION = 1;
       const STORE_NAMES = ["expenses", "notes", "settings", "learning"];
+      const LOCAL_PROFILE = { id: "local", type: "local", name: "This device", email: "", picture: "" };
+      const GOOGLE_SCOPES = "openid email profile https://www.googleapis.com/auth/drive.appdata";
+      const DRIVE_FILE_NAME = "lifeledger-data.json";
       const CATEGORIES = [
         "Housing", "Groceries", "Transport", "Bills", "Baby/Family", "Health",
         "Debt/Fees", "Eating Out", "Subscriptions", "Business", "Legal/Admin",
@@ -671,7 +708,7 @@
         expenses: { title: "Expenses", icon: "+", subtitle: "Type a receipt-like sentence. LifeLedger parses, categorises, and learns from corrections." },
         journal: { title: "Journal", icon: "J", subtitle: "Mixed-block notes with mood, sleep, energy, stress, tags, and autosave." },
         reports: { title: "Reports", icon: "R", subtitle: "Simple local charts and deterministic insights from your ledger and journal." },
-        settings: { title: "Settings", icon: "S", subtitle: "Theme, budgets, import/export, local reset, PWA install help, and optional sync metadata." }
+        settings: { title: "Settings", icon: "S", subtitle: "Google sign-in, profile privacy, budgets, backup, import/export, and app preferences." }
       };
 
       const KEYWORDS = {
@@ -713,6 +750,9 @@
         notes: [],
         settings: null,
         learning: { id: "main", vendorCategories: {}, corrections: {} },
+        profile: { ...LOCAL_PROFILE },
+        googleClientId: localStorage.getItem("lifeledgerGoogleClientId") || "",
+        accessToken: "",
         selectedExpense: null,
         selectedNoteId: null,
         journalTimer: null
@@ -728,13 +768,39 @@
       const escapeHTML = text => String(text ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
       const normalize = text => String(text || "").toLowerCase().replace(/[^\w\s/-]/g, " ").replace(/\s+/g, " ").trim();
 
-      function defaultSettings() {
+      function activeProfileId() {
+        return state.profile?.id || LOCAL_PROFILE.id;
+      }
+
+      function settingsId(profileId = activeProfileId()) {
+        return `settings:${profileId}`;
+      }
+
+      function learningId(profileId = activeProfileId()) {
+        return `learning:${profileId}`;
+      }
+
+      function recordProfileId(record) {
+        return record.profileId || LOCAL_PROFILE.id;
+      }
+
+      function profileInitials() {
+        const source = state.profile.email || state.profile.name || "LL";
+        return source.trim().slice(0, 2).toUpperCase();
+      }
+
+      function profileName() {
+        return state.profile.type === "google" ? (state.profile.name || state.profile.email || "Google user") : "Local device";
+      }
+
+      function defaultSettings(profileId = activeProfileId()) {
         return {
-          id: "main",
+          id: settingsId(profileId),
+          profileId,
           monthlyBudget: 1800,
           categoryBudgets: Object.fromEntries(CATEGORIES.map(cat => [cat, cat === "Housing" ? 750 : cat === "Groceries" ? 350 : cat === "Transport" ? 180 : 0])),
           darkMode: window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches,
-          driveSync: { enabled: false, folderName: "LifeLedger", lastManualSync: "" }
+          driveSync: { enabled: false, folderName: "LifeLedger", lastManualSync: "", lastCloudSync: "", driveFileId: "" }
         };
       }
 
@@ -797,10 +863,20 @@
       }
 
       async function loadState() {
-        state.expenses = (await getAll("expenses")).sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.createdAt).localeCompare(String(a.createdAt)));
-        state.notes = (await getAll("notes")).sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
-        state.settings = await getOne("settings", "main") || await putOne("settings", defaultSettings());
-        state.learning = await getOne("learning", "main") || await putOne("learning", { id: "main", vendorCategories: {}, corrections: {} });
+        const profileId = activeProfileId();
+        state.expenses = (await getAll("expenses"))
+          .filter(exp => recordProfileId(exp) === profileId)
+          .map(exp => ({ ...exp, profileId }))
+          .sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.createdAt).localeCompare(String(a.createdAt)));
+        state.notes = (await getAll("notes"))
+          .filter(note => recordProfileId(note) === profileId)
+          .map(note => ({ ...note, profileId }))
+          .sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+
+        const legacySettings = profileId === LOCAL_PROFILE.id ? await getOne("settings", "main") : null;
+        const legacyLearning = profileId === LOCAL_PROFILE.id ? await getOne("learning", "main") : null;
+        state.settings = await getOne("settings", settingsId(profileId)) || await putOne("settings", { ...defaultSettings(profileId), ...(legacySettings || {}), id: settingsId(profileId), profileId });
+        state.learning = await getOne("learning", learningId(profileId)) || await putOne("learning", { ...(legacyLearning || {}), id: learningId(profileId), profileId, vendorCategories: legacyLearning?.vendorCategories || {}, corrections: legacyLearning?.corrections || {} });
         applyTheme();
       }
 
@@ -814,7 +890,7 @@
 
       function applyTheme() {
         document.documentElement.dataset.theme = state.settings?.darkMode ? "dark" : "light";
-        document.querySelector("meta[name='theme-color']").setAttribute("content", state.settings?.darkMode ? "#202621" : "#23615b");
+        document.querySelector("meta[name='theme-color']").setAttribute("content", state.settings?.darkMode ? "#181f2b" : "#3267ff");
       }
 
       function pageHead(route) {
@@ -842,6 +918,27 @@
             <span>${cfg.icon}</span><span>${cfg.title}</span>
           </a>
         `).join("");
+        renderAccountStatus();
+      }
+
+      function renderAccountStatus() {
+        const target = $("#accountStatus");
+        if (!target) return;
+        target.innerHTML = html`
+          <div class="account-card">
+            <div class="avatar">${state.profile.picture ? `<img src="${escapeHTML(state.profile.picture)}" alt="">` : profileInitials()}</div>
+            <div>
+              <strong>${escapeHTML(profileName())}</strong>
+              <div class="muted">${state.profile.type === "google" ? escapeHTML(state.profile.email || "Google profile") : "Private to this browser"}</div>
+            </div>
+          </div>
+        `;
+        const sync = $("#syncStatus");
+        if (sync) {
+          sync.textContent = state.profile.type === "google"
+            ? (state.accessToken ? "Google connected for this session" : "Google profile active")
+            : "Local device profile";
+        }
       }
 
       function currentMonthExpenses() {
@@ -1026,6 +1123,7 @@
 
         return {
           id: uid(),
+          profileId: activeProfileId(),
           raw: original,
           amount,
           vendor,
@@ -1175,6 +1273,7 @@
         const data = new FormData(form);
         const updated = {
           ...baseExpense,
+          profileId: activeProfileId(),
           vendor: String(data.get("vendor") || "Expense").trim(),
           amount: Number(data.get("amount") || 0),
           category: String(data.get("category") || "Other"),
@@ -1213,6 +1312,7 @@
       function newNote() {
         return {
           id: uid(),
+          profileId: activeProfileId(),
           title: "Untitled note",
           tags: [],
           mood: 3,
@@ -1511,6 +1611,169 @@
         return String(label).length > 11 ? String(label).slice(0, 10) + "..." : String(label);
       }
 
+      function waitForGoogleIdentity() {
+        return new Promise((resolve, reject) => {
+          if (window.google?.accounts?.oauth2) {
+            resolve();
+            return;
+          }
+          let attempts = 0;
+          const timer = setInterval(() => {
+            attempts += 1;
+            if (window.google?.accounts?.oauth2) {
+              clearInterval(timer);
+              resolve();
+            } else if (attempts > 80) {
+              clearInterval(timer);
+              reject(new Error("Google sign-in script did not load. Check your connection and browser privacy settings."));
+            }
+          }, 125);
+        });
+      }
+
+      async function requestGoogleToken() {
+        if (!state.googleClientId.trim()) {
+          throw new Error("Add your Google OAuth Client ID first.");
+        }
+        await waitForGoogleIdentity();
+        return new Promise((resolve, reject) => {
+          const client = google.accounts.oauth2.initTokenClient({
+            client_id: state.googleClientId.trim(),
+            scope: GOOGLE_SCOPES,
+            callback: response => {
+              if (response.error) reject(new Error(response.error_description || response.error));
+              else resolve(response);
+            },
+            error_callback: err => reject(new Error(err.message || err.type || "Google sign-in was cancelled."))
+          });
+          client.requestAccessToken({ prompt: state.accessToken ? "" : "consent" });
+        });
+      }
+
+      async function googleFetch(url, options = {}) {
+        if (!state.accessToken) {
+          const token = await requestGoogleToken();
+          state.accessToken = token.access_token;
+        }
+        const response = await fetch(url, {
+          ...options,
+          headers: {
+            ...(options.headers || {}),
+            Authorization: `Bearer ${state.accessToken}`
+          }
+        });
+        if (response.status === 401) {
+          state.accessToken = "";
+          const token = await requestGoogleToken();
+          state.accessToken = token.access_token;
+          return googleFetch(url, options);
+        }
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(text || `Google request failed: ${response.status}`);
+        }
+        return response;
+      }
+
+      async function connectGoogleProfile() {
+        const token = await requestGoogleToken();
+        state.accessToken = token.access_token;
+        const profileRes = await googleFetch("https://www.googleapis.com/oauth2/v3/userinfo");
+        const profile = await profileRes.json();
+        if (!profile.sub) throw new Error("Google did not return a stable user ID.");
+        state.profile = {
+          id: `google:${profile.sub}`,
+          type: "google",
+          name: profile.name || profile.email || "Google user",
+          email: profile.email || "",
+          picture: profile.picture || ""
+        };
+        state.selectedNoteId = null;
+        state.selectedExpense = null;
+        await loadState();
+        toast(`Signed in as ${state.profile.email || state.profile.name}.`);
+        render();
+      }
+
+      async function useLocalProfile() {
+        state.profile = { ...LOCAL_PROFILE };
+        state.accessToken = "";
+        state.selectedNoteId = null;
+        state.selectedExpense = null;
+        await loadState();
+        toast("Switched to local device data.");
+        render();
+      }
+
+      function profilePayload() {
+        return {
+          app: "LifeLedger",
+          version: 2,
+          profileId: activeProfileId(),
+          profileType: state.profile.type,
+          exportedAt: new Date().toISOString(),
+          expenses: state.expenses,
+          notes: state.notes,
+          settings: state.settings,
+          learning: state.learning
+        };
+      }
+
+      function driveQueryForBackup() {
+        return encodeURIComponent(`name='${DRIVE_FILE_NAME}' and trashed=false`);
+      }
+
+      async function findDriveBackupFile() {
+        const fields = encodeURIComponent("files(id,name,modifiedTime)");
+        const response = await googleFetch(`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${driveQueryForBackup()}&fields=${fields}`);
+        const data = await response.json();
+        return (data.files || [])[0] || null;
+      }
+
+      async function backupToDrive() {
+        if (state.profile.type !== "google") throw new Error("Sign in with Google before using Drive backup.");
+        const existing = await findDriveBackupFile();
+        const payload = JSON.stringify(profilePayload(), null, 2);
+        if (existing) {
+          await googleFetch(`https://www.googleapis.com/upload/drive/v3/files/${existing.id}?uploadType=media&fields=id,name,modifiedTime`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: payload
+          });
+          state.settings.driveSync.driveFileId = existing.id;
+        } else {
+          const boundary = "lifeledger-" + Date.now();
+          const metadata = JSON.stringify({ name: DRIVE_FILE_NAME, parents: ["appDataFolder"] });
+          const body = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${payload}\r\n--${boundary}--`;
+          const created = await googleFetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,modifiedTime", {
+            method: "POST",
+            headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
+            body
+          }).then(res => res.json());
+          state.settings.driveSync.driveFileId = created.id;
+        }
+        state.settings.driveSync.enabled = true;
+        state.settings.driveSync.lastCloudSync = new Date().toLocaleString();
+        await saveSettings({ driveSync: state.settings.driveSync });
+        toast("Backed up this Google profile to Drive.");
+        render();
+      }
+
+      async function restoreFromDrive() {
+        if (state.profile.type !== "google") throw new Error("Sign in with Google before restoring from Drive.");
+        const existing = await findDriveBackupFile();
+        if (!existing) throw new Error("No LifeLedger Drive backup found for this Google account.");
+        const response = await googleFetch(`https://www.googleapis.com/drive/v3/files/${existing.id}?alt=media`);
+        const payload = await response.json();
+        await importPayload(payload, "replace");
+        state.settings.driveSync.enabled = true;
+        state.settings.driveSync.driveFileId = existing.id;
+        state.settings.driveSync.lastCloudSync = new Date().toLocaleString();
+        await saveSettings({ driveSync: state.settings.driveSync });
+        toast("Restored this Google profile from Drive.");
+        render();
+      }
+
       function renderSettings() {
         const categoryRows = CATEGORIES.map(cat => html`
           <tr>
@@ -1521,6 +1784,25 @@
         return html`
           ${pageHead("settings")}
           <div class="settings-grid">
+            <section class="panel">
+              <h3>Account and Data Privacy</h3>
+              <div class="account-card">
+                <div class="avatar">${state.profile.picture ? `<img src="${escapeHTML(state.profile.picture)}" alt="">` : profileInitials()}</div>
+                <div>
+                  <strong>${escapeHTML(profileName())}</strong>
+                  <div class="muted">${state.profile.type === "google" ? escapeHTML(state.profile.email || "Google account workspace") : "Unsigned users save only on this device."}</div>
+                </div>
+              </div>
+              <label style="margin-top:14px">Google OAuth Client ID
+                <input id="googleClientId" value="${escapeHTML(state.googleClientId)}" placeholder="1234567890-abc.apps.googleusercontent.com">
+              </label>
+              <p class="muted">Create a Web OAuth Client ID in Google Cloud and add this Pages origin: https://sanjeevan11.github.io</p>
+              <div class="toolbar" style="margin-top:12px">
+                <button class="btn primary" id="googleSignInBtn">Sign in with Google</button>
+                <button class="btn" id="localProfileBtn">Use local device</button>
+              </div>
+              <p class="muted">Google profile data is stored in a separate local namespace. The access token is kept only for this browser session.</p>
+            </section>
             <section class="panel">
               <h3>Preferences</h3>
               <div class="toggle-row">
@@ -1552,9 +1834,9 @@
               <p class="muted">Merge keeps existing records and overwrites matching IDs. Replace clears local data first.</p>
             </section>
             <section class="panel">
-              <h3>Local Data</h3>
-              <p class="muted">Everything lives in this browser's IndexedDB. Export before clearing if you want a backup.</p>
-              <button class="btn danger" id="deleteAllBtn">Delete all data</button>
+              <h3>Current Profile Data</h3>
+              <p class="muted">This clears only the active profile: ${escapeHTML(profileName())}. Other Google or local profiles on this device are left alone.</p>
+              <button class="btn danger" id="deleteAllBtn">Delete this profile's data</button>
             </section>
             <section class="panel">
               <h3>PWA Install Help</h3>
@@ -1562,37 +1844,34 @@
               <p class="muted">The app registers a service worker at the current project path, so it works under URLs like <code>/repo-name/</code>.</p>
             </section>
             <section class="panel">
-              <h3>Optional Google Drive Sync Settings</h3>
+              <h3>Google Drive Backup</h3>
               <div class="toggle-row">
-                <div><strong>Drive sync preference</strong><div class="muted">This static app stores the preference only. Export/import remains the actual portable backup.</div></div>
+                <div><strong>Drive backup</strong><div class="muted">Uses this Google account's hidden app data folder.</div></div>
                 <button class="btn" id="driveSyncBtn">${state.settings.driveSync.enabled ? "On" : "Off"}</button>
               </div>
-              <label style="margin-top:14px">Drive folder name
+              <label style="margin-top:14px">Backup label
                 <input id="driveFolder" value="${escapeHTML(state.settings.driveSync.folderName || "LifeLedger")}">
               </label>
+              <div class="toolbar" style="margin-top:12px">
+                <button class="btn primary" id="driveBackupBtn">Back up to Drive</button>
+                <button class="btn" id="driveRestoreBtn">Restore from Drive</button>
+              </div>
               <button class="btn small" id="markSyncBtn" style="margin-top:12px">Mark manual sync now</button>
-              <p class="muted">Last marked sync: ${state.settings.driveSync.lastManualSync || "Never"}</p>
+              <p class="muted">Last manual mark: ${state.settings.driveSync.lastManualSync || "Never"}</p>
+              <p class="muted">Last cloud backup/restore: ${state.settings.driveSync.lastCloudSync || "Never"}</p>
             </section>
           </div>
         `;
       }
 
       async function saveSettings(partial = {}) {
-        state.settings = { ...state.settings, ...partial };
+        state.settings = { ...defaultSettings(), ...state.settings, ...partial, id: settingsId(), profileId: activeProfileId() };
         await putOne("settings", state.settings);
         applyTheme();
       }
 
       async function exportData() {
-        const payload = {
-          app: "LifeLedger",
-          version: 1,
-          exportedAt: new Date().toISOString(),
-          expenses: state.expenses,
-          notes: state.notes,
-          settings: state.settings,
-          learning: state.learning
-        };
+        const payload = profilePayload();
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -1602,26 +1881,41 @@
         URL.revokeObjectURL(url);
       }
 
+      async function clearActiveProfileData() {
+        const profileId = activeProfileId();
+        const expenses = (await getAll("expenses")).filter(exp => recordProfileId(exp) === profileId);
+        const notes = (await getAll("notes")).filter(note => recordProfileId(note) === profileId);
+        for (const exp of expenses) await deleteOne("expenses", exp.id);
+        for (const note of notes) await deleteOne("notes", note.id);
+        await deleteOne("settings", settingsId(profileId));
+        await deleteOne("learning", learningId(profileId));
+      }
+
+      async function importPayload(payload, mode) {
+        const profileId = activeProfileId();
+        if (mode === "replace") await clearActiveProfileData();
+        const expenses = Array.isArray(payload.expenses) ? payload.expenses : [];
+        const notes = Array.isArray(payload.notes) ? payload.notes : [];
+        for (const exp of expenses) await putOne("expenses", { ...exp, id: exp.id || uid(), profileId });
+        for (const note of notes) await putOne("notes", { ...note, id: note.id || uid(), profileId });
+        if (payload.settings) await putOne("settings", { ...defaultSettings(profileId), ...payload.settings, id: settingsId(profileId), profileId });
+        if (payload.learning) await putOne("learning", { vendorCategories: {}, corrections: {}, ...payload.learning, id: learningId(profileId), profileId });
+        await loadState();
+      }
+
       async function importData(file, mode) {
         const text = await file.text();
         const payload = JSON.parse(text);
-        if (mode === "replace") await Promise.all(STORE_NAMES.map(clearStore));
-        const expenses = Array.isArray(payload.expenses) ? payload.expenses : [];
-        const notes = Array.isArray(payload.notes) ? payload.notes : [];
-        for (const exp of expenses) await putOne("expenses", { ...exp, id: exp.id || uid() });
-        for (const note of notes) await putOne("notes", { ...note, id: note.id || uid() });
-        if (payload.settings) await putOne("settings", { ...defaultSettings(), ...payload.settings, id: "main" });
-        if (payload.learning) await putOne("learning", { id: "main", vendorCategories: {}, corrections: {}, ...payload.learning });
-        await loadState();
+        await importPayload(payload, mode);
         toast(`Import ${mode} complete.`);
         render();
       }
 
       async function deleteAllData() {
-        if (!confirm("Delete all LifeLedger data from this browser? This cannot be undone.")) return;
-        await Promise.all(STORE_NAMES.map(clearStore));
+        if (!confirm(`Delete all LifeLedger data for ${profileName()}? This cannot be undone.`)) return;
+        await clearActiveProfileData();
         await loadState();
-        toast("All data deleted.");
+        toast("Profile data deleted.");
         render();
       }
 
@@ -1782,6 +2076,19 @@
       }
 
       function bindSettingsEvents() {
+        $("#googleClientId")?.addEventListener("change", event => {
+          state.googleClientId = event.target.value.trim();
+          localStorage.setItem("lifeledgerGoogleClientId", state.googleClientId);
+          toast("Google Client ID saved on this device.");
+        });
+        $("#googleSignInBtn")?.addEventListener("click", async () => {
+          try {
+            await connectGoogleProfile();
+          } catch (err) {
+            toast("Google sign-in failed: " + err.message);
+          }
+        });
+        $("#localProfileBtn")?.addEventListener("click", useLocalProfile);
         $("#darkModeBtn")?.addEventListener("click", async () => {
           await saveSettings({ darkMode: !state.settings.darkMode });
           render();
@@ -1817,6 +2124,21 @@
           state.settings.driveSync.enabled = !state.settings.driveSync.enabled;
           await saveSettings({ driveSync: state.settings.driveSync });
           render();
+        });
+        $("#driveBackupBtn")?.addEventListener("click", async () => {
+          try {
+            await backupToDrive();
+          } catch (err) {
+            toast("Drive backup failed: " + err.message);
+          }
+        });
+        $("#driveRestoreBtn")?.addEventListener("click", async () => {
+          if (!confirm("Restore from Google Drive and replace this profile's local data?")) return;
+          try {
+            await restoreFromDrive();
+          } catch (err) {
+            toast("Drive restore failed: " + err.message);
+          }
         });
         $("#driveFolder")?.addEventListener("change", async event => {
           state.settings.driveSync.folderName = event.target.value.trim() || "LifeLedger";
