@@ -1,0 +1,1860 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#23615b">
+  <title>LifeLedger</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f4ef;
+      --panel: #fffdfa;
+      --panel-2: #ece7dc;
+      --text: #20231f;
+      --muted: #62685f;
+      --line: #d9d2c5;
+      --brand: #23615b;
+      --brand-2: #328378;
+      --accent: #d5873a;
+      --danger: #b6423c;
+      --ok: #307a49;
+      --shadow: 0 18px 50px rgba(32, 35, 31, 0.12);
+      --radius: 8px;
+      --nav: 280px;
+    }
+
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #171b19;
+      --panel: #202621;
+      --panel-2: #2a312d;
+      --text: #f2f0ea;
+      --muted: #b2baae;
+      --line: #3b453f;
+      --brand: #79c9bc;
+      --brand-2: #9addd3;
+      --accent: #f2b06a;
+      --danger: #f08078;
+      --ok: #89d391;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.32);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+      color: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: var(--nav) 1fr;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 24px 18px;
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 6px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: linear-gradient(135deg, #23615b, #d5873a);
+      font-weight: 900;
+      box-shadow: var(--shadow);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      line-height: 1.1;
+    }
+
+    .brand small {
+      display: block;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .nav {
+      display: grid;
+      gap: 8px;
+    }
+
+    .nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 44px;
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .nav a.active {
+      color: var(--text);
+      background: var(--panel-2);
+    }
+
+    .nav span:first-child {
+      width: 24px;
+      text-align: center;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .main {
+      min-width: 0;
+      padding: 26px clamp(16px, 4vw, 46px) 46px;
+    }
+
+    .topbar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .page-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .page-title h2 {
+      margin: 0;
+      font-size: clamp(1.7rem, 4vw, 2.7rem);
+      line-height: 1.05;
+    }
+
+    .page-title p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      max-width: 760px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .grid.main-dash { grid-template-columns: minmax(0, 1.6fr) minmax(320px, 0.9fr); }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+    }
+
+    .panel.soft { background: var(--panel-2); }
+    .panel h3 {
+      margin: 0 0 12px;
+      font-size: 1.02rem;
+    }
+
+    .metric {
+      display: grid;
+      gap: 6px;
+      min-height: 112px;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .metric .value {
+      font-size: clamp(1.55rem, 4vw, 2.2rem);
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .metric .sub {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .input-row, .toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .smart-input {
+      flex: 1;
+      min-width: 260px;
+      height: 52px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      padding: 0 14px;
+      outline: 0;
+    }
+
+    .smart-input:focus, input:focus, select:focus, textarea:focus, [contenteditable="true"]:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 22%, transparent);
+    }
+
+    input, select, textarea {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: var(--radius);
+      padding: 10px 11px;
+      outline: 0;
+      min-height: 42px;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 96px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 10px 13px;
+      border-radius: var(--radius);
+      background: var(--panel-2);
+      color: var(--text);
+      font-weight: 800;
+      border: 1px solid var(--line);
+    }
+
+    .btn.primary {
+      color: #fff;
+      background: var(--brand);
+      border-color: var(--brand);
+    }
+
+    [data-theme="dark"] .btn.primary { color: #081412; }
+    .btn.danger { color: #fff; background: var(--danger); border-color: var(--danger); }
+    .btn.ghost { background: transparent; }
+    .btn.icon { width: 42px; padding: 0; }
+    .btn.small { min-height: 34px; padding: 7px 10px; font-size: 0.88rem; }
+
+    .list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: start;
+      padding: 12px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    .item-title {
+      font-weight: 850;
+      word-break: break-word;
+    }
+
+    .item-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .amount {
+      font-size: 1.2rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      min-height: 26px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--panel-2);
+      color: var(--text);
+      font-size: 0.82rem;
+      font-weight: 750;
+    }
+
+    .pill.good { background: color-mix(in srgb, var(--ok) 18%, transparent); color: var(--ok); }
+    .pill.warn { background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent); }
+    .pill.bad { background: color-mix(in srgb, var(--danger) 18%, transparent); color: var(--danger); }
+
+    .progress {
+      height: 12px;
+      overflow: hidden;
+      background: var(--panel-2);
+      border-radius: 999px;
+      border: 1px solid var(--line);
+    }
+
+    .progress > span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--brand), var(--accent));
+      border-radius: inherit;
+    }
+
+    .bar-list {
+      display: grid;
+      gap: 11px;
+    }
+
+    .bar-row {
+      display: grid;
+      gap: 5px;
+    }
+
+    .bar-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 750;
+    }
+
+    .split {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .muted { color: var(--muted); }
+    .hidden { display: none !important; }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+
+    .table th, .table td {
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .table th {
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .table input, .table select {
+      width: 100%;
+      min-width: 108px;
+    }
+
+    .menu-wrap { position: relative; }
+    .menu {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 6px);
+      min-width: 250px;
+      z-index: 20;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 10px;
+    }
+
+    .empty {
+      min-height: 126px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+
+    .expense-editor {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(110px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .expense-editor label, .form-grid label, .settings-grid label {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .expense-editor .wide { grid-column: span 2; }
+
+    .journal-layout {
+      display: grid;
+      grid-template-columns: 310px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .note-list {
+      display: grid;
+      gap: 8px;
+      max-height: calc(100vh - 245px);
+      overflow: auto;
+      padding-right: 3px;
+    }
+
+    .note-card {
+      text-align: left;
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+
+    .note-card.active {
+      border-color: var(--brand);
+      background: color-mix(in srgb, var(--brand) 10%, var(--panel));
+    }
+
+    .note-title {
+      font-weight: 850;
+      margin-bottom: 4px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 2fr repeat(4, minmax(96px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .editor-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      background: var(--panel);
+      padding: 8px 0 12px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 12px;
+    }
+
+    .blocks {
+      display: grid;
+      gap: 8px;
+    }
+
+    .block {
+      display: grid;
+      grid-template-columns: 94px 1fr auto;
+      gap: 8px;
+      align-items: start;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+
+    .block select { min-width: 0; width: 100%; padding: 7px; min-height: 36px; }
+    .block-actions { display: flex; gap: 5px; }
+    .block-content {
+      min-height: 38px;
+      padding: 8px 10px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      outline: 0;
+      word-break: break-word;
+    }
+
+    .block-content[data-placeholder]:empty::before {
+      content: attr(data-placeholder);
+      color: var(--muted);
+    }
+
+    .block[data-type="heading"] .block-content { font-size: 1.55rem; font-weight: 900; }
+    .block[data-type="bullet"] .block-content::before { content: "- "; color: var(--brand); font-weight: 900; }
+    .block[data-type="quote"] .block-content { border-left: 4px solid var(--brand); color: var(--muted); }
+    .block[data-type="code"] .block-content { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; background: var(--panel-2); white-space: pre-wrap; }
+    .block[data-type="callout"] .block-content { background: color-mix(in srgb, var(--accent) 18%, transparent); border-color: color-mix(in srgb, var(--accent) 30%, transparent); }
+    .block[data-type="divider"] .block-content { min-height: 24px; padding: 0; border-bottom: 2px solid var(--line); }
+    .block[data-type="checkbox"] .block-content { display: flex; gap: 8px; align-items: start; }
+    .block-check { margin-top: 9px; width: 18px; height: 18px; min-height: 0; }
+
+    .chart-wrap {
+      min-height: 260px;
+      position: relative;
+    }
+
+    canvas, svg {
+      max-width: 100%;
+    }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      align-items: start;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 60;
+      display: grid;
+      gap: 8px;
+      max-width: min(420px, calc(100vw - 36px));
+    }
+
+    .toast div {
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      background: var(--text);
+      color: var(--bg);
+      box-shadow: var(--shadow);
+      font-weight: 750;
+    }
+
+    @media (max-width: 1050px) {
+      .grid.main-dash, .journal-layout, .settings-grid { grid-template-columns: 1fr; }
+      .grid.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .note-list { max-height: none; }
+      .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      .app { display: block; }
+      .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        width: min(84vw, 310px);
+        transform: translateX(-105%);
+        transition: transform 0.18s ease;
+        z-index: 50;
+        box-shadow: var(--shadow);
+      }
+      body.nav-open .sidebar { transform: translateX(0); }
+      .topbar { display: flex; }
+      .page-head { align-items: start; flex-direction: column; }
+      .grid.two, .grid.three, .grid.four { grid-template-columns: 1fr; }
+      .expense-editor { grid-template-columns: 1fr; }
+      .expense-editor .wide { grid-column: auto; }
+      .table-wrap { overflow-x: auto; }
+      .block { grid-template-columns: 1fr; }
+      .block-actions { justify-content: end; }
+      .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="logo">LL</div>
+        <div>
+          <h1>LifeLedger</h1>
+          <small>Offline money and mind</small>
+        </div>
+      </div>
+      <nav class="nav" id="nav"></nav>
+      <div class="sidebar-footer">
+        <div id="syncStatus">IndexedDB ready</div>
+        <div class="muted">Works offline after first load.</div>
+      </div>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <button class="btn icon" id="menuBtn" aria-label="Open navigation">Menu</button>
+        <strong>LifeLedger</strong>
+        <button class="btn icon" id="quickThemeBtn" aria-label="Toggle dark mode">DM</button>
+      </div>
+      <section id="view"></section>
+    </main>
+  </div>
+  <div class="toast" id="toast" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const DB_NAME = "lifeledger-db";
+      const DB_VERSION = 1;
+      const STORE_NAMES = ["expenses", "notes", "settings", "learning"];
+      const CATEGORIES = [
+        "Housing", "Groceries", "Transport", "Bills", "Baby/Family", "Health",
+        "Debt/Fees", "Eating Out", "Subscriptions", "Business", "Legal/Admin",
+        "Tobacco/Nicotine", "Alcohol", "Clothing", "Personal Care",
+        "Entertainment", "Savings", "Other"
+      ];
+      const ESSENTIAL_CATEGORIES = new Set(["Housing", "Groceries", "Transport", "Bills", "Baby/Family", "Health", "Debt/Fees", "Business", "Legal/Admin", "Savings"]);
+      const BLOCK_TYPES = ["paragraph", "heading", "bullet", "checkbox", "divider", "quote", "code", "callout"];
+      const ROUTES = {
+        dashboard: { title: "Dashboard", icon: "D", subtitle: "Monthly budget, spending pressure, and the habits that deserve your attention." },
+        expenses: { title: "Expenses", icon: "+", subtitle: "Type a receipt-like sentence. LifeLedger parses, categorises, and learns from corrections." },
+        journal: { title: "Journal", icon: "J", subtitle: "Mixed-block notes with mood, sleep, energy, stress, tags, and autosave." },
+        reports: { title: "Reports", icon: "R", subtitle: "Simple local charts and deterministic insights from your ledger and journal." },
+        settings: { title: "Settings", icon: "S", subtitle: "Theme, budgets, import/export, local reset, PWA install help, and optional sync metadata." }
+      };
+
+      const KEYWORDS = {
+        "Housing": ["rent", "mortgage", "landlord", "council tax", "estate agent", "letting", "service charge"],
+        "Groceries": ["tesco", "asda", "sainsbury", "aldi", "lidl", "morrisons", "waitrose", "coop", "co-op", "grocery", "groceries", "supermarket", "food shop", "iceland"],
+        "Transport": ["uber", "bolt", "taxi", "bus", "train", "rail", "petrol", "diesel", "fuel", "parking", "oyster", "tube", "tram"],
+        "Bills": ["electric", "gas", "water", "internet", "broadband", "phone bill", "utility", "insurance", "energy"],
+        "Baby/Family": ["baby", "nappy", "nappies", "childcare", "nursery", "school", "toy", "pram", "family"],
+        "Health": ["pharmacy", "chemist", "doctor", "dentist", "prescription", "optician", "therapy", "clinic", "boots"],
+        "Debt/Fees": ["loan", "credit card", "fee", "bank charge", "overdraft", "interest", "klarna", "paypal credit"],
+        "Eating Out": ["restaurant", "cafe", "coffee", "mcdonald", "kfc", "burger", "deliveroo", "ubereats", "just eat", "pizza", "takeaway", "meal deal"],
+        "Subscriptions": ["netflix", "spotify", "apple", "prime", "amazon prime", "disney", "subscription", "patreon", "youtube premium", "icloud"],
+        "Business": ["client", "software", "hosting", "domain", "stationery", "invoice", "coworking", "supplies"],
+        "Legal/Admin": ["solicitor", "lawyer", "legal", "court", "passport", "dvla", "admin", "document", "notary"],
+        "Tobacco/Nicotine": ["nicotine", "nictoine", "pouch", "nicotine pouch", "vape", "vaping", "e-liquid", "eliquid", "snus", "zyn", "velo", "lost mary", "elf bar", "tobacco", "tobacoo", "cigarette", "cigarettes", "smoke shop", "vape shop"],
+        "Alcohol": ["beer", "wine", "vodka", "whisky", "pub", "bar", "off licence", "alcohol", "gin", "cider"],
+        "Clothing": ["clothes", "clothing", "shirt", "shoes", "trainers", "jacket", "asos", "primark", "zara", "hm"],
+        "Personal Care": ["haircut", "barber", "salon", "shampoo", "skincare", "toiletries", "deodorant", "makeup"],
+        "Entertainment": ["cinema", "game", "games", "steam", "xbox", "playstation", "concert", "ticket", "bowling"],
+        "Savings": ["savings", "isa", "investment", "pension", "emergency fund"]
+      };
+
+      const HASHTAG_ALIASES = {
+        tobacco: "Tobacco/Nicotine", tobacoo: "Tobacco/Nicotine", nicotine: "Tobacco/Nicotine", vape: "Tobacco/Nicotine", vaping: "Tobacco/Nicotine",
+        food: "Groceries", groceries: "Groceries", grocery: "Groceries", transport: "Transport", taxi: "Transport",
+        legal: "Legal/Admin", admin: "Legal/Admin", alcohol: "Alcohol", drink: "Alcohol", bills: "Bills",
+        health: "Health", medical: "Health", rent: "Housing", housing: "Housing", eatingout: "Eating Out",
+        takeaway: "Eating Out", subscription: "Subscriptions", subscriptions: "Subscriptions", business: "Business",
+        baby: "Baby/Family", family: "Baby/Family", debt: "Debt/Fees", fees: "Debt/Fees", clothing: "Clothing",
+        care: "Personal Care", entertainment: "Entertainment", savings: "Savings"
+      };
+
+      const PAYMENT_METHODS = ["cash", "card", "debit", "credit", "amex", "mastercard", "visa", "paypal", "bank", "transfer", "apple pay", "google pay", "monzo", "revolut"];
+
+      let db;
+      let state = {
+        route: "dashboard",
+        expenses: [],
+        notes: [],
+        settings: null,
+        learning: { id: "main", vendorCategories: {}, corrections: {} },
+        selectedExpense: null,
+        selectedNoteId: null,
+        journalTimer: null
+      };
+
+      const $ = (sel, root = document) => root.querySelector(sel);
+      const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+      const money = value => new Intl.NumberFormat(undefined, { style: "currency", currency: "GBP" }).format(Number(value || 0));
+      const todayISO = () => new Date().toISOString().slice(0, 10);
+      const monthKey = (date = new Date()) => String(date instanceof Date ? date.toISOString().slice(0, 7) : String(date).slice(0, 7));
+      const uid = () => crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
+      const html = (strings, ...vals) => strings.map((s, i) => s + (vals[i] ?? "")).join("");
+      const escapeHTML = text => String(text ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+      const normalize = text => String(text || "").toLowerCase().replace(/[^\w\s/-]/g, " ").replace(/\s+/g, " ").trim();
+
+      function defaultSettings() {
+        return {
+          id: "main",
+          monthlyBudget: 1800,
+          categoryBudgets: Object.fromEntries(CATEGORIES.map(cat => [cat, cat === "Housing" ? 750 : cat === "Groceries" ? 350 : cat === "Transport" ? 180 : 0])),
+          darkMode: window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches,
+          driveSync: { enabled: false, folderName: "LifeLedger", lastManualSync: "" }
+        };
+      }
+
+      function openDB() {
+        return new Promise((resolve, reject) => {
+          const req = indexedDB.open(DB_NAME, DB_VERSION);
+          req.onupgradeneeded = () => {
+            const next = req.result;
+            STORE_NAMES.forEach(name => {
+              if (!next.objectStoreNames.contains(name)) next.createObjectStore(name, { keyPath: "id" });
+            });
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      function tx(storeName, mode = "readonly") {
+        return db.transaction(storeName, mode).objectStore(storeName);
+      }
+
+      function getAll(storeName) {
+        return new Promise((resolve, reject) => {
+          const req = tx(storeName).getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      function getOne(storeName, id) {
+        return new Promise((resolve, reject) => {
+          const req = tx(storeName).get(id);
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      function putOne(storeName, value) {
+        return new Promise((resolve, reject) => {
+          const req = tx(storeName, "readwrite").put(value);
+          req.onsuccess = () => resolve(value);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      function deleteOne(storeName, id) {
+        return new Promise((resolve, reject) => {
+          const req = tx(storeName, "readwrite").delete(id);
+          req.onsuccess = () => resolve();
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      function clearStore(storeName) {
+        return new Promise((resolve, reject) => {
+          const req = tx(storeName, "readwrite").clear();
+          req.onsuccess = () => resolve();
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function loadState() {
+        state.expenses = (await getAll("expenses")).sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.createdAt).localeCompare(String(a.createdAt)));
+        state.notes = (await getAll("notes")).sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+        state.settings = await getOne("settings", "main") || await putOne("settings", defaultSettings());
+        state.learning = await getOne("learning", "main") || await putOne("learning", { id: "main", vendorCategories: {}, corrections: {} });
+        applyTheme();
+      }
+
+      function toast(message) {
+        const wrap = $("#toast");
+        const el = document.createElement("div");
+        el.textContent = message;
+        wrap.appendChild(el);
+        setTimeout(() => el.remove(), 3600);
+      }
+
+      function applyTheme() {
+        document.documentElement.dataset.theme = state.settings?.darkMode ? "dark" : "light";
+        document.querySelector("meta[name='theme-color']").setAttribute("content", state.settings?.darkMode ? "#202621" : "#23615b");
+      }
+
+      function pageHead(route) {
+        const cfg = ROUTES[route];
+        return html`
+          <header class="page-head">
+            <div class="page-title">
+              <h2>${cfg.title}</h2>
+              <p>${cfg.subtitle}</p>
+            </div>
+          </header>
+        `;
+      }
+
+      function setRoute(route) {
+        const next = ROUTES[route] ? route : "dashboard";
+        state.route = next;
+        if (location.hash !== "#" + next) location.hash = "#" + next;
+        render();
+      }
+
+      function renderNav() {
+        $("#nav").innerHTML = Object.entries(ROUTES).map(([key, cfg]) => html`
+          <a href="#${key}" class="${state.route === key ? "active" : ""}" data-route="${key}">
+            <span>${cfg.icon}</span><span>${cfg.title}</span>
+          </a>
+        `).join("");
+      }
+
+      function currentMonthExpenses() {
+        const key = monthKey();
+        return state.expenses.filter(exp => String(exp.date || "").slice(0, 7) === key);
+      }
+
+      function sumExpenses(expenses, predicate = () => true) {
+        return expenses.filter(predicate).reduce((sum, exp) => sum + Number(exp.amount || 0), 0);
+      }
+
+      function categoryTotals(expenses) {
+        const totals = Object.fromEntries(CATEGORIES.map(cat => [cat, 0]));
+        expenses.forEach(exp => totals[exp.category || "Other"] = (totals[exp.category || "Other"] || 0) + Number(exp.amount || 0));
+        return totals;
+      }
+
+      function daysRemainingInMonth() {
+        const now = new Date();
+        const last = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        return Math.max(1, last - now.getDate() + 1);
+      }
+
+      function progressBar(value, max) {
+        const pct = max > 0 ? Math.min(100, Math.max(0, value / max * 100)) : 0;
+        return `<div class="progress"><span style="width:${pct.toFixed(1)}%"></span></div>`;
+      }
+
+      function renderBarList(totals, limit = 10) {
+        const rows = Object.entries(totals).filter(([, value]) => value > 0).sort((a, b) => b[1] - a[1]).slice(0, limit);
+        const max = Math.max(1, ...rows.map(([, value]) => value));
+        if (!rows.length) return `<div class="empty">No category spend yet this month.</div>`;
+        return `<div class="bar-list">${rows.map(([cat, value]) => html`
+          <div class="bar-row">
+            <div class="bar-label"><span>${cat}</span><span>${money(value)}</span></div>
+            ${progressBar(value, max)}
+          </div>
+        `).join("")}</div>`;
+      }
+
+      function renderDashboard() {
+        const expenses = currentMonthExpenses();
+        const spent = sumExpenses(expenses);
+        const budget = Number(state.settings.monthlyBudget || 0);
+        const remaining = budget - spent;
+        const safe = remaining / daysRemainingInMonth();
+        const essentials = sumExpenses(expenses, exp => exp.essential);
+        const nonEssentials = spent - essentials;
+        const totals = categoryTotals(expenses);
+        const tobacco = totals["Tobacco/Nicotine"] || 0;
+        const alcohol = totals["Alcohol"] || 0;
+        const subs = totals["Subscriptions"] || 0;
+        const eating = totals["Eating Out"] || 0;
+
+        return html`
+          ${pageHead("dashboard")}
+          <div class="grid four">
+            ${metric("Monthly Budget", money(budget), "Change this in Settings.")}
+            ${metric("Spent", money(spent), `${Math.round(budget ? spent / budget * 100 : 0)}% of budget`)}
+            ${metric("Remaining", money(remaining), `${money(safe)} safe-to-spend per day`, remaining < 0 ? "bad" : "good")}
+            ${metric("Non-essential", money(nonEssentials), `${money(essentials)} essential`, nonEssentials > essentials ? "warn" : "")}
+          </div>
+          <div class="grid main-dash" style="margin-top:16px">
+            <section class="panel">
+              <div class="split">
+                <h3>Category Spend</h3>
+                <span class="pill">${monthKey()}</span>
+              </div>
+              ${renderBarList(totals)}
+            </section>
+            <section class="panel">
+              <h3>Watchlist</h3>
+              <div class="grid two">
+                ${metric("Tobacco/Nicotine", money(tobacco), tobacco > 0 ? "Tracked separately for visibility." : "No spend logged.", tobacco > 0 ? "warn" : "")}
+                ${metric("Alcohol", money(alcohol), alcohol > 0 ? "Monthly alcohol spend." : "No spend logged.", alcohol > 0 ? "warn" : "")}
+                ${metric("Subscriptions", money(subs), "Recurring-style costs this month.")}
+                ${metric("Eating Out", money(eating), "Cafes, delivery, restaurants.")}
+              </div>
+            </section>
+          </div>
+          <section class="panel" style="margin-top:16px">
+            <div class="split"><h3>Recent Expenses</h3><a class="btn small" href="#expenses">Add or edit</a></div>
+            ${renderExpenseList(state.expenses.slice(0, 8), false)}
+          </section>
+        `;
+      }
+
+      function metric(label, value, sub, tone = "") {
+        return html`
+          <div class="panel metric">
+            <div class="label">${label}</div>
+            <div class="value">${value}</div>
+            <div class="sub"><span class="pill ${tone}">${sub}</span></div>
+          </div>
+        `;
+      }
+
+      function parseExpense(raw) {
+        const original = raw.trim();
+        const lower = normalize(original);
+        const tags = Array.from(original.matchAll(/#([\w/-]+)/g)).map(match => match[1].toLowerCase());
+        let working = original.replace(/#([\w/-]+)/g, " ").trim();
+        let note = "";
+        const noteMatch = working.match(/\b(?:note|memo):\s*(.+)$/i);
+        if (noteMatch) {
+          note = noteMatch[1].trim();
+          working = working.slice(0, noteMatch.index).trim();
+        }
+
+        let date = todayISO();
+        const isoDate = working.match(/\b(20\d{2}-\d{1,2}-\d{1,2})\b/);
+        const slashDate = working.match(/\b(\d{1,2})[/-](\d{1,2})(?:[/-](\d{2,4}))?\b/);
+        if (isoDate) {
+          date = isoDate[1].split("-").map((part, index) => index ? part.padStart(2, "0") : part).join("-");
+          working = working.replace(isoDate[0], " ");
+        } else if (slashDate) {
+          const now = new Date();
+          const year = slashDate[3] ? Number(String(slashDate[3]).padStart(4, "20")) : now.getFullYear();
+          date = `${year}-${slashDate[2].padStart(2, "0")}-${slashDate[1].padStart(2, "0")}`;
+          working = working.replace(slashDate[0], " ");
+        } else if (/\byesterday\b/i.test(working)) {
+          const d = new Date();
+          d.setDate(d.getDate() - 1);
+          date = d.toISOString().slice(0, 10);
+          working = working.replace(/\byesterday\b/i, " ");
+        }
+
+        let paymentMethod = "";
+        PAYMENT_METHODS.forEach(method => {
+          const re = new RegExp("\\b" + method.replace(/\s+/g, "\\s+") + "\\b", "i");
+          if (!paymentMethod && re.test(working)) {
+            paymentMethod = method.replace(/\b\w/g, c => c.toUpperCase());
+            working = working.replace(re, " ");
+          }
+        });
+
+        const amountMatches = Array.from(working.matchAll(/(?:\u00a3|\$|gbp\s*)?(\d+(?:[.,]\d{1,2})?)(?!\w)/gi));
+        let amount = 0;
+        let amountText = "";
+        if (amountMatches.length) {
+          const chosen = amountMatches[amountMatches.length - 1];
+          amount = Number(chosen[1].replace(",", "."));
+          amountText = chosen[0];
+          working = working.slice(0, chosen.index) + " " + working.slice(chosen.index + chosen[0].length);
+        }
+
+        let vendor = working.replace(/\s+/g, " ").trim();
+        vendor = vendor.replace(/\b(on|for|at|from|with)\b$/i, "").trim();
+        if (!vendor && tags.length) vendor = tags[0];
+        vendor = titleCase(vendor || "Expense");
+
+        const learnedVendor = state.learning.vendorCategories[normalize(vendor)];
+        const learnedCorrection = state.learning.corrections[normalize(original)];
+        let category = learnedVendor || "Other";
+        let confidence = learnedVendor ? 0.86 : 0.35;
+        const reasons = [];
+        if (learnedVendor) reasons.push("vendor memory");
+
+        const hashtagCategory = tags.map(tag => HASHTAG_ALIASES[tag] || CATEGORIES.find(cat => normalize(cat).replace(/\s+/g, "") === tag.replace(/[/-]/g, ""))).find(Boolean);
+        if (hashtagCategory) {
+          category = hashtagCategory;
+          confidence = 0.98;
+          reasons.push("hashtag override");
+        } else if (learnedCorrection) {
+          category = learnedCorrection;
+          confidence = 0.9;
+          reasons.push("correction learning");
+        } else {
+          const matched = bestCategoryMatch(lower + " " + normalize(vendor));
+          if (matched.score > confidence) {
+            category = matched.category;
+            confidence = matched.score;
+            reasons.push(matched.reason);
+          }
+        }
+
+        const essentialOverride = /\b(nonessential|non-essential|treat|luxury|want)\b/i.test(original) ? false :
+          /\b(essential|need|required|bill)\b/i.test(original) ? true : ESSENTIAL_CATEGORIES.has(category);
+
+        if (!amount) confidence = Math.min(confidence, 0.22);
+        if (!vendor || vendor === "Expense") confidence = Math.min(confidence, 0.45);
+
+        return {
+          id: uid(),
+          raw: original,
+          amount,
+          vendor,
+          category,
+          hashtags: tags,
+          paymentMethod,
+          date,
+          note,
+          essential: essentialOverride,
+          confidence: Math.round(confidence * 100),
+          parseReasons: reasons,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+      }
+
+      function titleCase(text) {
+        return String(text).trim().split(/\s+/).map(word => word ? word[0].toUpperCase() + word.slice(1) : "").join(" ");
+      }
+
+      function bestCategoryMatch(text) {
+        let best = { category: "Other", score: 0.35, reason: "fallback" };
+        Object.entries(KEYWORDS).forEach(([category, words]) => {
+          words.forEach(word => {
+            const normalizedWord = normalize(word);
+            if (text.includes(normalizedWord)) {
+              const score = normalizedWord.length > 7 ? 0.91 : 0.82;
+              if (score > best.score) best = { category, score, reason: "keyword match" };
+            } else {
+              const fuzzy = fuzzyContains(text, normalizedWord);
+              if (fuzzy && fuzzy > best.score) best = { category, score: fuzzy, reason: "fuzzy typo match" };
+            }
+          });
+        });
+        return best;
+      }
+
+      function fuzzyContains(text, needle) {
+        if (!needle || needle.length < 4) return 0;
+        const words = text.split(/\s+/).filter(Boolean);
+        const needleParts = needle.split(/\s+/);
+        const candidates = needleParts.length > 1 ? ngrams(words, needleParts.length).concat(words) : words;
+        let best = 0;
+        candidates.forEach(candidate => {
+          const dist = levenshtein(candidate, needle);
+          const limit = needle.length <= 5 ? 1 : needle.length <= 9 ? 2 : 3;
+          if (dist <= limit) best = Math.max(best, 0.68 + Math.min(0.18, (limit - dist + 1) * 0.05));
+        });
+        return best;
+      }
+
+      function ngrams(words, size) {
+        const out = [];
+        for (let i = 0; i <= words.length - size; i++) out.push(words.slice(i, i + size).join(" "));
+        return out;
+      }
+
+      function levenshtein(a, b) {
+        const dp = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
+        for (let i = 0; i <= a.length; i++) dp[i][0] = i;
+        for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+        for (let i = 1; i <= a.length; i++) {
+          for (let j = 1; j <= b.length; j++) {
+            dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+          }
+        }
+        return dp[a.length][b.length];
+      }
+
+      function renderExpenses() {
+        const parsed = state.selectedExpense;
+        return html`
+          ${pageHead("expenses")}
+          <section class="panel">
+            <h3>Smart Expense Capture</h3>
+            <form id="expenseForm" class="input-row">
+              <input class="smart-input" id="expenseText" autocomplete="off" placeholder="Example: Tesco 12.50 groceries #food card yesterday note: weekly shop">
+              <button class="btn primary" type="submit">Add Expense</button>
+            </form>
+            <div id="parsePreview" class="${parsed ? "" : "hidden"}">${parsed ? renderParsedEditor(parsed, true) : ""}</div>
+          </section>
+          <section class="panel" style="margin-top:16px">
+            <div class="split">
+              <h3>All Expenses</h3>
+              <div class="toolbar">
+                <input id="expenseSearch" placeholder="Filter expenses">
+                <select id="categoryFilter">
+                  <option value="">All categories</option>
+                  ${CATEGORIES.map(cat => `<option value="${cat}">${cat}</option>`).join("")}
+                </select>
+              </div>
+            </div>
+            <div id="expensesList" style="margin-top:12px">${renderExpenseList(state.expenses, true)}</div>
+          </section>
+        `;
+      }
+
+      function renderParsedEditor(expense, isNew) {
+        return html`
+          <form class="expense-editor" data-expense-editor="${expense.id}">
+            <label class="wide">Vendor<input name="vendor" value="${escapeHTML(expense.vendor)}"></label>
+            <label>Amount<input name="amount" type="number" min="0" step="0.01" value="${expense.amount || ""}"></label>
+            <label>Category<select name="category">${CATEGORIES.map(cat => `<option ${cat === expense.category ? "selected" : ""}>${cat}</option>`).join("")}</select></label>
+            <label>Date<input name="date" type="date" value="${expense.date}"></label>
+            <label>Payment<input name="paymentMethod" value="${escapeHTML(expense.paymentMethod)}" placeholder="Card, cash..."></label>
+            <label>Essential<select name="essential"><option value="true" ${expense.essential ? "selected" : ""}>Essential</option><option value="false" ${!expense.essential ? "selected" : ""}>Non-essential</option></select></label>
+            <label class="wide">Hashtags<input name="hashtags" value="${escapeHTML(expense.hashtags.map(tag => "#" + tag).join(" "))}"></label>
+            <label class="wide">Note<input name="note" value="${escapeHTML(expense.note)}"></label>
+            <div class="wide">
+              <span class="pill ${expense.confidence < 50 ? "bad" : expense.confidence < 80 ? "warn" : "good"}">Confidence ${expense.confidence}%</span>
+              <span class="pill">${expense.parseReasons.join(", ") || "manual/default"}</span>
+            </div>
+            <div class="toolbar">
+              <button class="btn primary" type="submit">${isNew ? "Save Parsed Expense" : "Save Changes"}</button>
+              ${isNew ? `<button class="btn ghost" type="button" data-cancel-parse>Cancel</button>` : `<button class="btn danger" type="button" data-delete-expense="${expense.id}">Delete</button>`}
+            </div>
+          </form>
+        `;
+      }
+
+      function renderExpenseList(expenses, editable) {
+        if (!expenses.length) return `<div class="empty">No expenses yet. Try "vape shop 15 #tobacco" or "Tesco 12.50 groceries #food".</div>`;
+        return `<div class="list">${expenses.map(exp => html`
+          <article class="item" data-expense-row="${exp.id}">
+            <div>
+              <div class="item-title">${escapeHTML(exp.vendor)}</div>
+              <div class="item-meta">
+                <span class="pill">${escapeHTML(exp.category)}</span>
+                <span>${escapeHTML(exp.date)}</span>
+                ${exp.paymentMethod ? `<span>${escapeHTML(exp.paymentMethod)}</span>` : ""}
+                <span>${exp.essential ? "Essential" : "Non-essential"}</span>
+                <span>${Number(exp.confidence || 0)}% confidence</span>
+                ${(exp.hashtags || []).map(tag => `<span>#${escapeHTML(tag)}</span>`).join("")}
+              </div>
+              ${exp.note ? `<div class="muted" style="margin-top:8px">${escapeHTML(exp.note)}</div>` : ""}
+              ${editable ? `<div class="hidden edit-area" style="margin-top:10px">${renderParsedEditor(exp, false)}</div>` : ""}
+            </div>
+            <div>
+              <div class="amount">${money(exp.amount)}</div>
+              ${editable ? `<button class="btn small" data-edit-expense="${exp.id}" style="margin-top:8px">Edit</button>` : ""}
+            </div>
+          </article>
+        `).join("")}</div>`;
+      }
+
+      async function saveExpenseFromForm(form, baseExpense) {
+        const data = new FormData(form);
+        const updated = {
+          ...baseExpense,
+          vendor: String(data.get("vendor") || "Expense").trim(),
+          amount: Number(data.get("amount") || 0),
+          category: String(data.get("category") || "Other"),
+          date: String(data.get("date") || todayISO()),
+          paymentMethod: String(data.get("paymentMethod") || "").trim(),
+          essential: data.get("essential") === "true",
+          hashtags: String(data.get("hashtags") || "").split(/\s+/).map(tag => tag.replace(/^#/, "").toLowerCase()).filter(Boolean),
+          note: String(data.get("note") || "").trim(),
+          updatedAt: new Date().toISOString()
+        };
+        await putOne("expenses", updated);
+        learnFromExpense(updated, baseExpense.category !== updated.category);
+        await loadState();
+        state.selectedExpense = null;
+        toast("Expense saved.");
+        render();
+      }
+
+      async function learnFromExpense(expense, wasCorrection) {
+        const key = normalize(expense.vendor);
+        if (key) state.learning.vendorCategories[key] = expense.category;
+        if (wasCorrection && expense.raw) state.learning.corrections[normalize(expense.raw)] = expense.category;
+        await putOne("learning", state.learning);
+      }
+
+      function filterExpenses() {
+        const term = normalize($("#expenseSearch")?.value || "");
+        const cat = $("#categoryFilter")?.value || "";
+        const filtered = state.expenses.filter(exp => {
+          const text = normalize([exp.vendor, exp.category, exp.note, exp.raw, (exp.hashtags || []).join(" ")].join(" "));
+          return (!term || text.includes(term)) && (!cat || exp.category === cat);
+        });
+        $("#expensesList").innerHTML = renderExpenseList(filtered, true);
+      }
+
+      function newNote() {
+        return {
+          id: uid(),
+          title: "Untitled note",
+          tags: [],
+          mood: 3,
+          energy: 3,
+          stress: 3,
+          sleep: 7,
+          blocks: [{ id: uid(), type: "paragraph", text: "", checked: false }],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+      }
+
+      function renderJournal() {
+        const note = state.notes.find(item => item.id === state.selectedNoteId) || state.notes[0];
+        state.selectedNoteId = note?.id || null;
+        return html`
+          ${pageHead("journal")}
+          <div class="journal-layout">
+            <aside class="panel">
+              <div class="split">
+                <h3>Notes</h3>
+                <button class="btn small primary" id="newNoteBtn">New</button>
+              </div>
+              <div class="note-list" id="noteList">
+                ${state.notes.length ? state.notes.map(item => noteCard(item, item.id === state.selectedNoteId)).join("") : `<div class="empty">No notes yet. Start one and it will autosave locally.</div>`}
+              </div>
+            </aside>
+            <section class="panel">
+              ${note ? renderNoteEditor(note) : `<div class="empty">Create a note to open the editor.</div>`}
+            </section>
+          </div>
+        `;
+      }
+
+      function noteCard(note, active) {
+        const firstText = note.blocks.map(block => block.text).find(Boolean) || "No body text yet";
+        return html`
+          <button class="note-card ${active ? "active" : ""}" data-open-note="${note.id}">
+            <div class="note-title">${escapeHTML(note.title || "Untitled note")}</div>
+            <div class="muted">${escapeHTML(firstText.slice(0, 96))}</div>
+            <div class="item-meta"><span>${new Date(note.updatedAt).toLocaleDateString()}</span>${(note.tags || []).slice(0, 3).map(tag => `<span>#${escapeHTML(tag)}</span>`).join("")}</div>
+          </button>
+        `;
+      }
+
+      function renderNoteEditor(note) {
+        return html`
+          <form id="noteForm" data-note-id="${note.id}">
+            <div class="form-grid">
+              <label>Title<input name="title" value="${escapeHTML(note.title)}"></label>
+              <label>Mood<select name="mood">${scaleOptions(note.mood)}</select></label>
+              <label>Energy<select name="energy">${scaleOptions(note.energy)}</select></label>
+              <label>Stress<select name="stress">${scaleOptions(note.stress)}</select></label>
+              <label>Sleep<input name="sleep" type="number" step="0.25" min="0" max="24" value="${Number(note.sleep || 0)}"></label>
+            </div>
+            <label style="display:grid;gap:5px;margin-bottom:10px;color:var(--muted);font-weight:800;font-size:.82rem">Tags
+              <input name="tags" value="${escapeHTML((note.tags || []).map(tag => "#" + tag).join(" "))}" placeholder="#work #family #reflection">
+            </label>
+            <div class="editor-toolbar">
+              ${BLOCK_TYPES.map(type => `<button class="btn small" type="button" data-add-block="${type}">${type}</button>`).join("")}
+              <button class="btn small danger" type="button" data-delete-note="${note.id}">Delete note</button>
+              <span class="pill" id="autosaveStatus">Autosaved</span>
+            </div>
+            <div class="blocks" id="blocks">
+              ${note.blocks.map(block => renderBlock(block)).join("")}
+            </div>
+          </form>
+        `;
+      }
+
+      function scaleOptions(value) {
+        return [1, 2, 3, 4, 5].map(n => `<option value="${n}" ${Number(value) === n ? "selected" : ""}>${n}</option>`).join("");
+      }
+
+      function renderBlock(block) {
+        const type = BLOCK_TYPES.includes(block.type) ? block.type : "paragraph";
+        const body = type === "checkbox"
+          ? `<input class="block-check" type="checkbox" ${block.checked ? "checked" : ""} aria-label="Checkbox block complete"><div class="block-content" contenteditable="true" data-placeholder="Checkbox text">${escapeHTML(block.text)}</div>`
+          : `<div class="block-content" contenteditable="${type === "divider" ? "false" : "true"}" data-placeholder="${type === "divider" ? "" : "Type here"}">${type === "divider" ? "" : escapeHTML(block.text)}</div>`;
+        return html`
+          <div class="block" data-block-id="${block.id}" data-type="${type}">
+            <select data-block-type>
+              ${BLOCK_TYPES.map(kind => `<option value="${kind}" ${kind === type ? "selected" : ""}>${kind}</option>`).join("")}
+            </select>
+            <div>${body}</div>
+            <div class="block-actions">
+              <button class="btn small icon" type="button" title="Move up" data-move-block="up">Up</button>
+              <button class="btn small icon" type="button" title="Move down" data-move-block="down">Dn</button>
+              <button class="btn small icon" type="button" title="Delete block" data-remove-block>x</button>
+            </div>
+          </div>
+        `;
+      }
+
+      function collectNoteForm() {
+        const form = $("#noteForm");
+        if (!form) return null;
+        const note = state.notes.find(item => item.id === form.dataset.noteId);
+        if (!note) return null;
+        const data = new FormData(form);
+        const blocks = $$(".block", form).map(blockEl => {
+          const type = blockEl.dataset.type;
+          const content = $(".block-content", blockEl);
+          return {
+            id: blockEl.dataset.blockId,
+            type,
+            text: type === "divider" ? "" : content.innerText.replace(/\n+$/, ""),
+            checked: $(".block-check", blockEl)?.checked || false
+          };
+        });
+        return {
+          ...note,
+          title: String(data.get("title") || "Untitled note").trim(),
+          tags: String(data.get("tags") || "").split(/\s+/).map(tag => tag.replace(/^#/, "").toLowerCase()).filter(Boolean),
+          mood: Number(data.get("mood") || 3),
+          energy: Number(data.get("energy") || 3),
+          stress: Number(data.get("stress") || 3),
+          sleep: Number(data.get("sleep") || 0),
+          blocks: blocks.length ? blocks : [{ id: uid(), type: "paragraph", text: "", checked: false }],
+          updatedAt: new Date().toISOString()
+        };
+      }
+
+      function scheduleNoteSave() {
+        const status = $("#autosaveStatus");
+        if (status) status.textContent = "Saving...";
+        clearTimeout(state.journalTimer);
+        state.journalTimer = setTimeout(async () => {
+          const note = collectNoteForm();
+          if (!note) return;
+          await putOne("notes", note);
+          await loadState();
+          const idx = state.notes.findIndex(item => item.id === note.id);
+          if (idx >= 0) state.notes[idx] = note;
+          if ($("#autosaveStatus")) $("#autosaveStatus").textContent = "Autosaved";
+          $("#noteList") && ($("#noteList").innerHTML = state.notes.map(item => noteCard(item, item.id === note.id)).join(""));
+        }, 500);
+      }
+
+      function renderReports() {
+        const expenses = state.expenses;
+        const monthly = groupMonthly(expenses);
+        const totals = categoryTotals(currentMonthExpenses());
+        const insights = buildInsights();
+        return html`
+          ${pageHead("reports")}
+          <div class="grid two">
+            <section class="panel"><h3>Category Spend</h3><canvas id="categoryChart" height="230"></canvas></section>
+            <section class="panel"><h3>Monthly Spend</h3><canvas id="monthlyChart" height="230"></canvas></section>
+            <section class="panel"><h3>Budget Progress</h3>${renderBudgetProgress(totals)}</section>
+            <section class="panel"><h3>Mood and Stress Trend</h3><canvas id="wellbeingChart" height="230"></canvas></section>
+          </div>
+          <section class="panel" style="margin-top:16px">
+            <h3>Insight Cards</h3>
+            <div class="grid three">${insights.map(text => `<div class="panel soft">${escapeHTML(text)}</div>`).join("")}</div>
+          </section>
+        `;
+      }
+
+      function groupMonthly(expenses) {
+        const map = {};
+        expenses.forEach(exp => {
+          const key = String(exp.date || "").slice(0, 7);
+          map[key] = (map[key] || 0) + Number(exp.amount || 0);
+        });
+        return Object.entries(map).sort((a, b) => a[0].localeCompare(b[0])).slice(-12);
+      }
+
+      function renderBudgetProgress(totals) {
+        const budget = Number(state.settings.monthlyBudget || 0);
+        const spent = sumExpenses(currentMonthExpenses());
+        const categoryRows = CATEGORIES.filter(cat => Number(state.settings.categoryBudgets[cat] || 0) > 0).map(cat => {
+          const max = Number(state.settings.categoryBudgets[cat] || 0);
+          const value = totals[cat] || 0;
+          return html`<div class="bar-row"><div class="bar-label"><span>${cat}</span><span>${money(value)} / ${money(max)}</span></div>${progressBar(value, max)}</div>`;
+        }).join("");
+        return html`
+          <div class="bar-row">
+            <div class="bar-label"><span>Total month</span><span>${money(spent)} / ${money(budget)}</span></div>
+            ${progressBar(spent, budget)}
+          </div>
+          <div class="bar-list" style="margin-top:14px">${categoryRows || `<div class="empty">No category budgets set yet.</div>`}</div>
+        `;
+      }
+
+      function buildInsights() {
+        const monthExpenses = currentMonthExpenses();
+        const totals = categoryTotals(monthExpenses);
+        const spent = sumExpenses(monthExpenses);
+        const budget = Number(state.settings.monthlyBudget || 0);
+        const top = Object.entries(totals).sort((a, b) => b[1] - a[1])[0] || ["Other", 0];
+        const tobacco = totals["Tobacco/Nicotine"] || 0;
+        const alcohol = totals["Alcohol"] || 0;
+        const notes = state.notes.slice().sort((a, b) => a.updatedAt.localeCompare(b.updatedAt));
+        const latestStress = notes.slice(-5).map(note => note.stress);
+        const avgStress = latestStress.length ? latestStress.reduce((a, b) => a + b, 0) / latestStress.length : 0;
+        return [
+          budget ? `You have used ${Math.round(spent / budget * 100)}% of this month's budget, with ${money(budget - spent)} remaining.` : "Set a monthly budget in Settings to unlock budget pacing.",
+          top[1] ? `${top[0]} is the leading category this month at ${money(top[1])}.` : "No spending logged this month yet.",
+          tobacco ? `Tobacco/Nicotine is at ${money(tobacco)} this month. This category is always surfaced separately.` : "Tobacco/Nicotine spend is currently zero for the month.",
+          alcohol ? `Alcohol spend is ${money(alcohol)} this month.` : "Alcohol spend is currently zero for the month.",
+          avgStress ? `Your recent average stress score is ${avgStress.toFixed(1)} out of 5.` : "Journal stress insights will appear after you add notes.",
+          monthExpenses.length ? `${monthExpenses.filter(exp => !exp.essential).length} of ${monthExpenses.length} expenses are marked non-essential.` : "Marking expenses essential or non-essential will sharpen your dashboard."
+        ];
+      }
+
+      function drawCharts() {
+        if (state.route !== "reports") return;
+        const categoryCanvas = $("#categoryChart");
+        const monthlyCanvas = $("#monthlyChart");
+        const wellbeingCanvas = $("#wellbeingChart");
+        if (categoryCanvas) drawBarChart(categoryCanvas, Object.entries(categoryTotals(currentMonthExpenses())).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).slice(0, 8), "Spend");
+        if (monthlyCanvas) drawBarChart(monthlyCanvas, groupMonthly(state.expenses), "Spend");
+        if (wellbeingCanvas) drawLineChart(wellbeingCanvas, state.notes.slice().sort((a, b) => a.updatedAt.localeCompare(b.updatedAt)).slice(-14));
+      }
+
+      function prepCanvas(canvas) {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = Math.max(320, Math.floor(rect.width * dpr));
+        canvas.height = Math.floor((Number(canvas.getAttribute("height")) || 230) * dpr);
+        const ctx = canvas.getContext("2d");
+        ctx.scale(dpr, dpr);
+        return { ctx, width: canvas.width / dpr, height: canvas.height / dpr };
+      }
+
+      function drawBarChart(canvas, rows, label) {
+        const { ctx, width, height } = prepCanvas(canvas);
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = getCss("--muted");
+        ctx.font = "12px system-ui";
+        if (!rows.length) {
+          ctx.fillText("No data yet", 16, 28);
+          return;
+        }
+        const pad = 34;
+        const max = Math.max(...rows.map(([, value]) => value), 1);
+        const barW = Math.max(18, (width - pad * 2) / rows.length - 10);
+        rows.forEach(([name, value], i) => {
+          const x = pad + i * ((width - pad * 2) / rows.length) + 5;
+          const h = (height - 74) * value / max;
+          const y = height - 42 - h;
+          ctx.fillStyle = i % 2 ? getCss("--accent") : getCss("--brand");
+          ctx.fillRect(x, y, barW, h);
+          ctx.fillStyle = getCss("--text");
+          ctx.fillText(shortLabel(name), x, height - 20);
+          ctx.fillStyle = getCss("--muted");
+          ctx.fillText(money(value).replace(".00", ""), x, Math.max(14, y - 7));
+        });
+        ctx.fillStyle = getCss("--muted");
+        ctx.fillText(label, 10, 14);
+      }
+
+      function drawLineChart(canvas, notes) {
+        const { ctx, width, height } = prepCanvas(canvas);
+        ctx.clearRect(0, 0, width, height);
+        ctx.font = "12px system-ui";
+        if (!notes.length) {
+          ctx.fillStyle = getCss("--muted");
+          ctx.fillText("No journal data yet", 16, 28);
+          return;
+        }
+        drawSeries(ctx, width, height, notes.map(note => Number(note.mood || 0)), getCss("--brand"), "Mood");
+        drawSeries(ctx, width, height, notes.map(note => Number(note.stress || 0)), getCss("--danger"), "Stress");
+      }
+
+      function drawSeries(ctx, width, height, values, color, label) {
+        const pad = 30;
+        const step = values.length > 1 ? (width - pad * 2) / (values.length - 1) : 0;
+        ctx.beginPath();
+        values.forEach((value, i) => {
+          const x = pad + i * step;
+          const y = height - pad - ((value - 1) / 4) * (height - pad * 2);
+          if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+        });
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        values.forEach((value, i) => {
+          const x = pad + i * step;
+          const y = height - pad - ((value - 1) / 4) * (height - pad * 2);
+          ctx.beginPath();
+          ctx.arc(x, y, 4, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+        });
+        ctx.fillStyle = color;
+        ctx.fillText(label, width - 74, label === "Mood" ? 18 : 36);
+      }
+
+      function getCss(name) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      }
+
+      function shortLabel(label) {
+        return String(label).length > 11 ? String(label).slice(0, 10) + "..." : String(label);
+      }
+
+      function renderSettings() {
+        const categoryRows = CATEGORIES.map(cat => html`
+          <tr>
+            <td>${cat}</td>
+            <td><input type="number" min="0" step="1" data-category-budget="${cat}" value="${Number(state.settings.categoryBudgets[cat] || 0)}"></td>
+          </tr>
+        `).join("");
+        return html`
+          ${pageHead("settings")}
+          <div class="settings-grid">
+            <section class="panel">
+              <h3>Preferences</h3>
+              <div class="toggle-row">
+                <div><strong>Dark mode</strong><div class="muted">Saved locally on this device.</div></div>
+                <button class="btn" id="darkModeBtn">${state.settings.darkMode ? "On" : "Off"}</button>
+              </div>
+              <label style="margin-top:14px">Monthly budget
+                <input id="monthlyBudget" type="number" min="0" step="1" value="${Number(state.settings.monthlyBudget || 0)}">
+              </label>
+              <div class="menu-wrap" style="margin-top:14px">
+                <button class="btn" id="advancedBudgetBtn">... Category budgets</button>
+                <div class="menu hidden" id="advancedBudgetMenu">
+                  <div class="table-wrap">
+                    <table class="table"><thead><tr><th>Category</th><th>Budget</th></tr></thead><tbody>${categoryRows}</tbody></table>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section class="panel">
+              <h3>Export and Import</h3>
+              <div class="toolbar">
+                <button class="btn primary" id="exportBtn">Export JSON</button>
+                <label class="btn">Import JSON<input id="importFile" type="file" accept="application/json,.json" class="hidden"></label>
+              </div>
+              <div class="toolbar" style="margin-top:12px">
+                <label><input type="radio" name="importMode" value="merge" checked> Merge</label>
+                <label><input type="radio" name="importMode" value="replace"> Replace</label>
+              </div>
+              <p class="muted">Merge keeps existing records and overwrites matching IDs. Replace clears local data first.</p>
+            </section>
+            <section class="panel">
+              <h3>Local Data</h3>
+              <p class="muted">Everything lives in this browser's IndexedDB. Export before clearing if you want a backup.</p>
+              <button class="btn danger" id="deleteAllBtn">Delete all data</button>
+            </section>
+            <section class="panel">
+              <h3>PWA Install Help</h3>
+              <p>Open this site from GitHub Pages, then use your browser's install option. On Chrome/Edge, look for the install icon in the address bar or choose "Install app" from the menu. On iOS Safari, use Share, then "Add to Home Screen".</p>
+              <p class="muted">The app registers a service worker at the current project path, so it works under URLs like <code>/repo-name/</code>.</p>
+            </section>
+            <section class="panel">
+              <h3>Optional Google Drive Sync Settings</h3>
+              <div class="toggle-row">
+                <div><strong>Drive sync preference</strong><div class="muted">This static app stores the preference only. Export/import remains the actual portable backup.</div></div>
+                <button class="btn" id="driveSyncBtn">${state.settings.driveSync.enabled ? "On" : "Off"}</button>
+              </div>
+              <label style="margin-top:14px">Drive folder name
+                <input id="driveFolder" value="${escapeHTML(state.settings.driveSync.folderName || "LifeLedger")}">
+              </label>
+              <button class="btn small" id="markSyncBtn" style="margin-top:12px">Mark manual sync now</button>
+              <p class="muted">Last marked sync: ${state.settings.driveSync.lastManualSync || "Never"}</p>
+            </section>
+          </div>
+        `;
+      }
+
+      async function saveSettings(partial = {}) {
+        state.settings = { ...state.settings, ...partial };
+        await putOne("settings", state.settings);
+        applyTheme();
+      }
+
+      async function exportData() {
+        const payload = {
+          app: "LifeLedger",
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          expenses: state.expenses,
+          notes: state.notes,
+          settings: state.settings,
+          learning: state.learning
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `lifeledger-export-${todayISO()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      async function importData(file, mode) {
+        const text = await file.text();
+        const payload = JSON.parse(text);
+        if (mode === "replace") await Promise.all(STORE_NAMES.map(clearStore));
+        const expenses = Array.isArray(payload.expenses) ? payload.expenses : [];
+        const notes = Array.isArray(payload.notes) ? payload.notes : [];
+        for (const exp of expenses) await putOne("expenses", { ...exp, id: exp.id || uid() });
+        for (const note of notes) await putOne("notes", { ...note, id: note.id || uid() });
+        if (payload.settings) await putOne("settings", { ...defaultSettings(), ...payload.settings, id: "main" });
+        if (payload.learning) await putOne("learning", { id: "main", vendorCategories: {}, corrections: {}, ...payload.learning });
+        await loadState();
+        toast(`Import ${mode} complete.`);
+        render();
+      }
+
+      async function deleteAllData() {
+        if (!confirm("Delete all LifeLedger data from this browser? This cannot be undone.")) return;
+        await Promise.all(STORE_NAMES.map(clearStore));
+        await loadState();
+        toast("All data deleted.");
+        render();
+      }
+
+      function render() {
+        renderNav();
+        $("#view").innerHTML = {
+          dashboard: renderDashboard,
+          expenses: renderExpenses,
+          journal: renderJournal,
+          reports: renderReports,
+          settings: renderSettings
+        }[state.route]();
+        document.body.classList.remove("nav-open");
+        bindViewEvents();
+        drawCharts();
+      }
+
+      function bindGlobalEvents() {
+        window.addEventListener("hashchange", () => {
+          state.route = (location.hash || "#dashboard").replace("#", "");
+          if (!ROUTES[state.route]) state.route = "dashboard";
+          render();
+        });
+        $("#menuBtn").addEventListener("click", () => document.body.classList.toggle("nav-open"));
+        $("#quickThemeBtn").addEventListener("click", async () => {
+          await saveSettings({ darkMode: !state.settings.darkMode });
+          render();
+        });
+        document.addEventListener("click", event => {
+          if (!event.target.closest(".sidebar") && !event.target.closest("#menuBtn")) document.body.classList.remove("nav-open");
+          if (!event.target.closest(".menu-wrap")) $$(".menu").forEach(menu => menu.classList.add("hidden"));
+        });
+        window.addEventListener("resize", drawCharts);
+      }
+
+      function bindViewEvents() {
+        if (state.route === "expenses") bindExpenseEvents();
+        if (state.route === "journal") bindJournalEvents();
+        if (state.route === "settings") bindSettingsEvents();
+      }
+
+      function bindExpenseEvents() {
+        $("#expenseText")?.addEventListener("input", event => {
+          const value = event.target.value.trim();
+          state.selectedExpense = value ? parseExpense(value) : null;
+          $("#parsePreview").classList.toggle("hidden", !state.selectedExpense);
+          $("#parsePreview").innerHTML = state.selectedExpense ? renderParsedEditor(state.selectedExpense, true) : "";
+          bindExpenseEditorForms();
+        });
+        $("#expenseForm")?.addEventListener("submit", async event => {
+          event.preventDefault();
+          const value = $("#expenseText").value.trim();
+          if (!value) return;
+          state.selectedExpense = parseExpense(value);
+          await saveExpenseFromForm($("[data-expense-editor]", $("#parsePreview")) || fakeExpenseForm(state.selectedExpense), state.selectedExpense);
+        });
+        $("#expenseSearch")?.addEventListener("input", filterExpenses);
+        $("#categoryFilter")?.addEventListener("change", filterExpenses);
+        bindExpenseEditorForms();
+        $$("[data-edit-expense]").forEach(btn => btn.addEventListener("click", () => {
+          const row = btn.closest("[data-expense-row]");
+          $(".edit-area", row).classList.toggle("hidden");
+        }));
+        $$("[data-delete-expense]").forEach(btn => btn.addEventListener("click", async () => {
+          if (!confirm("Delete this expense?")) return;
+          await deleteOne("expenses", btn.dataset.deleteExpense);
+          await loadState();
+          toast("Expense deleted.");
+          render();
+        }));
+      }
+
+      function bindExpenseEditorForms() {
+        $$("[data-expense-editor]").forEach(form => {
+          if (form.dataset.bound) return;
+          form.dataset.bound = "1";
+          form.addEventListener("submit", async event => {
+            event.preventDefault();
+            const existing = state.expenses.find(exp => exp.id === form.dataset.expenseEditor) || state.selectedExpense;
+            await saveExpenseFromForm(form, existing);
+          });
+          $("[data-cancel-parse]", form)?.addEventListener("click", () => {
+            state.selectedExpense = null;
+            $("#expenseText").value = "";
+            $("#parsePreview").classList.add("hidden");
+            $("#parsePreview").innerHTML = "";
+          });
+        });
+      }
+
+      function fakeExpenseForm(expense) {
+        const form = document.createElement("form");
+        Object.entries({
+          vendor: expense.vendor,
+          amount: expense.amount,
+          category: expense.category,
+          date: expense.date,
+          paymentMethod: expense.paymentMethod,
+          essential: String(expense.essential),
+          hashtags: expense.hashtags.map(tag => "#" + tag).join(" "),
+          note: expense.note
+        }).forEach(([key, value]) => {
+          const input = document.createElement("input");
+          input.name = key;
+          input.value = value;
+          form.appendChild(input);
+        });
+        return form;
+      }
+
+      function bindJournalEvents() {
+        $("#newNoteBtn")?.addEventListener("click", async () => {
+          const note = newNote();
+          await putOne("notes", note);
+          await loadState();
+          state.selectedNoteId = note.id;
+          render();
+        });
+        $$("[data-open-note]").forEach(btn => btn.addEventListener("click", () => {
+          state.selectedNoteId = btn.dataset.openNote;
+          render();
+        }));
+        $("#noteForm")?.addEventListener("input", scheduleNoteSave);
+        $("#noteForm")?.addEventListener("change", scheduleNoteSave);
+        $$("[data-add-block]").forEach(btn => btn.addEventListener("click", async () => {
+          const note = collectNoteForm();
+          if (!note) return;
+          note.blocks.push({ id: uid(), type: btn.dataset.addBlock, text: "", checked: false });
+          await putOne("notes", note);
+          await loadState();
+          state.selectedNoteId = note.id;
+          render();
+        }));
+        $$("[data-block-type]").forEach(sel => sel.addEventListener("change", async () => {
+          const block = sel.closest(".block");
+          block.dataset.type = sel.value;
+          scheduleNoteSave();
+          setTimeout(render, 650);
+        }));
+        $$("[data-remove-block]").forEach(btn => btn.addEventListener("click", async () => {
+          const block = btn.closest(".block");
+          block.remove();
+          scheduleNoteSave();
+        }));
+        $$("[data-move-block]").forEach(btn => btn.addEventListener("click", () => {
+          const block = btn.closest(".block");
+          if (btn.dataset.moveBlock === "up" && block.previousElementSibling) block.parentElement.insertBefore(block, block.previousElementSibling);
+          if (btn.dataset.moveBlock === "down" && block.nextElementSibling) block.parentElement.insertBefore(block.nextElementSibling, block);
+          scheduleNoteSave();
+        }));
+        $("[data-delete-note]")?.addEventListener("click", async event => {
+          if (!confirm("Delete this note?")) return;
+          await deleteOne("notes", event.target.dataset.deleteNote);
+          await loadState();
+          state.selectedNoteId = state.notes[0]?.id || null;
+          render();
+        });
+      }
+
+      function bindSettingsEvents() {
+        $("#darkModeBtn")?.addEventListener("click", async () => {
+          await saveSettings({ darkMode: !state.settings.darkMode });
+          render();
+        });
+        $("#monthlyBudget")?.addEventListener("change", async event => {
+          await saveSettings({ monthlyBudget: Number(event.target.value || 0) });
+          toast("Monthly budget saved.");
+        });
+        $("#advancedBudgetBtn")?.addEventListener("click", event => {
+          event.stopPropagation();
+          $("#advancedBudgetMenu").classList.toggle("hidden");
+        });
+        $$("[data-category-budget]").forEach(input => input.addEventListener("change", async () => {
+          state.settings.categoryBudgets[input.dataset.categoryBudget] = Number(input.value || 0);
+          await saveSettings({ categoryBudgets: state.settings.categoryBudgets });
+          toast("Category budget saved.");
+        }));
+        $("#exportBtn")?.addEventListener("click", exportData);
+        $("#importFile")?.addEventListener("change", async event => {
+          const file = event.target.files[0];
+          if (!file) return;
+          const mode = $("input[name='importMode']:checked").value;
+          try {
+            await importData(file, mode);
+          } catch (err) {
+            toast("Import failed: " + err.message);
+          } finally {
+            event.target.value = "";
+          }
+        });
+        $("#deleteAllBtn")?.addEventListener("click", deleteAllData);
+        $("#driveSyncBtn")?.addEventListener("click", async () => {
+          state.settings.driveSync.enabled = !state.settings.driveSync.enabled;
+          await saveSettings({ driveSync: state.settings.driveSync });
+          render();
+        });
+        $("#driveFolder")?.addEventListener("change", async event => {
+          state.settings.driveSync.folderName = event.target.value.trim() || "LifeLedger";
+          await saveSettings({ driveSync: state.settings.driveSync });
+          toast("Sync preference saved.");
+        });
+        $("#markSyncBtn")?.addEventListener("click", async () => {
+          state.settings.driveSync.lastManualSync = new Date().toLocaleString();
+          await saveSettings({ driveSync: state.settings.driveSync });
+          render();
+        });
+      }
+
+      async function registerServiceWorker() {
+        if (!("serviceWorker" in navigator)) return;
+        try {
+          const basePath = location.pathname.replace(/[^/]*$/, "");
+          await navigator.serviceWorker.register(basePath + "sw.js", { scope: basePath });
+        } catch (err) {
+          console.warn("Service worker registration failed", err);
+        }
+      }
+
+      async function init() {
+        db = await openDB();
+        await loadState();
+        state.route = (location.hash || "#dashboard").replace("#", "");
+        if (!ROUTES[state.route]) state.route = "dashboard";
+        bindGlobalEvents();
+        render();
+        registerServiceWorker();
+      }
+
+      init().catch(err => {
+        console.error(err);
+        $("#view").innerHTML = `<section class="panel"><h2>LifeLedger could not start</h2><p>${escapeHTML(err.message)}</p></section>`;
+      });
+    })();
+  </script>
+</body>
+</html>
