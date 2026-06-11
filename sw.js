@@ -1,4 +1,4 @@
-const CACHE_NAME = "lifeledger-v4";
+const CACHE_NAME = "lifeledger-v5";
 const APP_SHELL = ["./", "./index.html", "./manifest.webmanifest"];
 
 self.addEventListener("install", event => {
