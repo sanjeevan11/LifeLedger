@@ -1517,7 +1517,7 @@
       }
 
       function blocksToText(blocks = []) {
-        return blocks.map(block => {
+        const lines = blocks.map(block => {
           const text = block.text || "";
           if (block.type === "heading") return "# " + text;
           if (block.type === "bullet") return "- " + text;
@@ -1527,7 +1527,14 @@
           if (block.type === "code") return "```\n" + text + "\n```";
           if (block.type === "callout") return "> [!NOTE] " + text;
           return text;
-        }).join("\n\n");
+        });
+        return lines.reduce((out, line, index) => {
+          if (index === 0) return line;
+          const prev = blocks[index - 1]?.type;
+          const current = blocks[index]?.type;
+          const tight = (prev === "checkbox" && current === "checkbox") || (prev === "bullet" && current === "bullet");
+          return out + (tight ? "\n" : "\n\n") + line;
+        }, "");
       }
 
       function textToBlocks(text) {
@@ -1600,22 +1607,67 @@
         if (!textarea) return;
         const snippets = {
           paragraph: "\n\n",
-          heading: "\n# Heading\n",
-          bullet: "\n- List item\n",
-          checkbox: "\n- [ ] Checklist item\n",
+          heading: "\n# ",
+          bullet: "\n- ",
+          checkbox: "\n- [ ] ",
           divider: "\n---\n",
-          quote: "\n> Quote\n",
+          quote: "\n> ",
           code: "\n```\ncode\n```\n",
-          callout: "\n> [!NOTE] Important note\n"
+          callout: "\n> [!NOTE] "
         };
-        const snippet = snippets[type] || "\n\n";
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
-        textarea.value = textarea.value.slice(0, start) + snippet + textarea.value.slice(end);
-        const next = start + snippet.length;
+        const value = textarea.value;
+        let snippet = snippets[type] || "\n\n";
+        if ((start === 0 || value[start - 1] === "\n") && snippet.startsWith("\n")) {
+          snippet = snippet.slice(1);
+        }
+        textarea.value = value.slice(0, start) + snippet + value.slice(end);
+        const next = type === "code" ? start + "\n```\n".length : start + snippet.length;
         textarea.focus();
         textarea.setSelectionRange(next, next);
         textarea.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+
+      function handleNoteBodyKeydown(event) {
+        if (event.key !== "Enter" || event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) return;
+        const textarea = event.target;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        if (start !== end) return;
+
+        const value = textarea.value;
+        const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+        const lineEndIndex = value.indexOf("\n", start);
+        const lineEnd = lineEndIndex === -1 ? value.length : lineEndIndex;
+        const currentLine = value.slice(lineStart, lineEnd);
+        const beforeCursor = value.slice(lineStart, start);
+        const afterCursorOnLine = value.slice(start, lineEnd);
+
+        const patterns = [
+          { re: /^(\s*)-\s+\[( |x|X)\]\s*(.*)$/, marker: match => `${match[1]}- [ ] ` },
+          { re: /^(\s*)[-*]\s+(.*)$/, marker: match => `${match[1]}- ` },
+          { re: /^(\s*)>\s+(.*)$/, marker: match => `${match[1]}> ` }
+        ];
+
+        for (const pattern of patterns) {
+          const match = currentLine.match(pattern.re);
+          if (!match) continue;
+          const marker = pattern.marker(match);
+          const content = beforeCursor.slice(marker.length).trim() + afterCursorOnLine.trim();
+          event.preventDefault();
+          if (!content) {
+            textarea.value = value.slice(0, lineStart) + "\n" + value.slice(lineEnd + (lineEndIndex === -1 ? 0 : 1));
+            textarea.setSelectionRange(lineStart + 1, lineStart + 1);
+          } else {
+            const insert = "\n" + marker;
+            textarea.value = value.slice(0, start) + insert + value.slice(end);
+            const next = start + insert.length;
+            textarea.setSelectionRange(next, next);
+          }
+          textarea.dispatchEvent(new Event("input", { bubbles: true }));
+          return;
+        }
       }
 
       function collectNoteForm() {
@@ -2276,6 +2328,7 @@
         }));
         $("#noteForm")?.addEventListener("input", scheduleNoteSave);
         $("#noteForm")?.addEventListener("change", scheduleNoteSave);
+        $("#noteBody")?.addEventListener("keydown", handleNoteBodyKeydown);
         $$("[data-add-block]").forEach(btn => btn.addEventListener("click", async () => {
           insertIntoNoteBody(btn.dataset.addBlock);
         }));
