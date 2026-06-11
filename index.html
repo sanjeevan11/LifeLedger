@@ -3,43 +3,45 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#3267ff">
+  <meta name="theme-color" content="#00a3ff">
   <title>LifeLedger</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root {
       color-scheme: light;
-      --bg: #f7f9fc;
+      --bg: #f4f8ff;
       --panel: #ffffff;
-      --panel-2: #eef4ff;
-      --text: #172033;
-      --muted: #667085;
-      --line: #d9e2f2;
-      --brand: #3267ff;
-      --brand-2: #18a7a1;
-      --accent: #ff6b57;
-      --danger: #d14b5a;
-      --ok: #168a55;
-      --shadow: 0 18px 50px rgba(23, 32, 51, 0.1);
+      --panel-2: #e7f3ff;
+      --text: #11192d;
+      --muted: #5f6d82;
+      --line: #ccdaf0;
+      --brand: #00a3ff;
+      --brand-2: #11c76f;
+      --accent: #ff4d7d;
+      --danger: #e33d5f;
+      --ok: #0f9f61;
+      --shadow: 0 22px 60px rgba(17, 25, 45, 0.13);
+      --glow: 0 18px 42px color-mix(in srgb, var(--brand) 24%, transparent);
       --radius: 8px;
       --nav: 280px;
     }
 
     [data-theme="dark"] {
       color-scheme: dark;
-      --bg: #10141d;
-      --panel: #181f2b;
-      --panel-2: #222b3b;
-      --text: #f4f7fb;
-      --muted: #a8b3c6;
-      --line: #303b4f;
-      --brand: #8fb0ff;
-      --brand-2: #5dd5cf;
-      --accent: #ff9a87;
-      --danger: #ff7d8b;
-      --ok: #7bd89d;
-      --shadow: 0 18px 50px rgba(0, 0, 0, 0.32);
+      --bg: #07111f;
+      --panel: #101d31;
+      --panel-2: #122b49;
+      --text: #f6fbff;
+      --muted: #a8b9d4;
+      --line: #294567;
+      --brand: #33c4ff;
+      --brand-2: #3df28f;
+      --accent: #ff5d92;
+      --danger: #ff6f8f;
+      --ok: #74f2a1;
+      --shadow: 0 22px 60px rgba(0, 0, 0, 0.38);
+      --glow: 0 20px 54px color-mix(in srgb, var(--brand) 28%, transparent);
     }
 
     * { box-sizing: border-box; }
@@ -48,7 +50,9 @@
       margin: 0;
       font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background:
-        linear-gradient(180deg, color-mix(in srgb, var(--panel-2) 55%, transparent), transparent 360px),
+        linear-gradient(145deg, color-mix(in srgb, var(--brand) 16%, transparent), transparent 34%),
+        linear-gradient(35deg, color-mix(in srgb, var(--accent) 12%, transparent), transparent 42%),
+        linear-gradient(180deg, color-mix(in srgb, var(--panel-2) 72%, transparent), transparent 390px),
         var(--bg);
       color: var(--text);
       line-height: 1.45;
@@ -80,6 +84,7 @@
       padding: 24px 18px;
       background: var(--panel);
       border-right: 1px solid var(--line);
+      box-shadow: 8px 0 36px rgba(17, 25, 45, 0.06);
       display: flex;
       flex-direction: column;
       gap: 20px;
@@ -100,9 +105,9 @@
       display: grid;
       place-items: center;
       color: #fff;
-      background: linear-gradient(135deg, var(--brand), var(--accent));
+      background: linear-gradient(135deg, var(--brand), var(--accent), var(--brand-2));
       font-weight: 900;
-      box-shadow: var(--shadow);
+      box-shadow: var(--glow);
     }
 
     .brand h1 {
@@ -135,7 +140,8 @@
 
     .nav a.active {
       color: var(--text);
-      background: var(--panel-2);
+      background: linear-gradient(135deg, color-mix(in srgb, var(--brand) 18%, var(--panel)), color-mix(in srgb, var(--accent) 12%, var(--panel)));
+      box-shadow: 0 10px 24px color-mix(in srgb, var(--brand) 14%, transparent);
     }
 
     .nav span:first-child {
@@ -159,6 +165,57 @@
       border-radius: var(--radius);
       background: var(--panel-2);
       margin-bottom: 10px;
+    }
+
+    .auth-card {
+      position: relative;
+      overflow: hidden;
+      padding: 18px;
+      border: 1px solid color-mix(in srgb, var(--brand) 28%, var(--line));
+      border-radius: var(--radius);
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--brand) 18%, var(--panel)), color-mix(in srgb, var(--accent) 13%, var(--panel)) 55%, color-mix(in srgb, var(--brand-2) 14%, var(--panel)));
+      box-shadow: var(--glow);
+    }
+
+    .auth-card h3 { font-size: 1.18rem; }
+
+    .auth-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 14px;
+    }
+
+    .google-mark {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      color: #4285f4;
+      font-weight: 900;
+    }
+
+    .btn.google {
+      color: #07111f;
+      background: linear-gradient(135deg, #ffffff, #dff3ff);
+      border-color: color-mix(in srgb, var(--brand) 32%, #fff);
+      box-shadow: 0 14px 30px color-mix(in srgb, var(--brand) 24%, transparent);
+    }
+
+    .dev-setup {
+      margin-top: 14px;
+      border-top: 1px solid color-mix(in srgb, var(--brand) 20%, var(--line));
+      padding-top: 12px;
+    }
+
+    .dev-setup summary {
+      cursor: pointer;
+      color: var(--muted);
+      font-weight: 800;
     }
 
     .avatar {
@@ -227,10 +284,12 @@
       border: 1px solid var(--line);
       border-radius: var(--radius);
       padding: 16px;
-      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+      box-shadow: 0 10px 32px rgba(17, 25, 45, 0.06);
     }
 
-    .panel.soft { background: var(--panel-2); }
+    .panel.soft {
+      background: linear-gradient(135deg, color-mix(in srgb, var(--panel-2) 82%, var(--panel)), var(--panel));
+    }
     .panel h3 {
       margin: 0 0 12px;
       font-size: 1.02rem;
@@ -240,6 +299,8 @@
       display: grid;
       gap: 6px;
       min-height: 112px;
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--brand) 9%, var(--panel)), color-mix(in srgb, var(--accent) 7%, var(--panel)));
     }
 
     .metric .label {
@@ -311,12 +372,13 @@
     }
 
     .btn.primary {
-      color: #fff;
-      background: var(--brand);
-      border-color: var(--brand);
+      color: #07111f;
+      background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      border-color: color-mix(in srgb, var(--brand) 70%, var(--brand-2));
+      box-shadow: 0 12px 28px color-mix(in srgb, var(--brand) 24%, transparent);
     }
 
-    [data-theme="dark"] .btn.primary { color: #081412; }
+    [data-theme="dark"] .btn.primary { color: #07111f; }
     .btn.danger { color: #fff; background: var(--danger); border-color: var(--danger); }
     .btn.ghost { background: transparent; }
     .btn.icon { width: 42px; padding: 0; }
@@ -695,6 +757,7 @@
       const LOCAL_PROFILE = { id: "local", type: "local", name: "This device", email: "", picture: "" };
       const GOOGLE_SCOPES = "openid email profile https://www.googleapis.com/auth/drive.appdata";
       const DRIVE_FILE_NAME = "lifeledger-data.json";
+      const BUILT_IN_GOOGLE_CLIENT_ID = "";
       const CATEGORIES = [
         "Housing", "Groceries", "Transport", "Bills", "Baby/Family", "Health",
         "Debt/Fees", "Eating Out", "Subscriptions", "Business", "Legal/Admin",
@@ -751,8 +814,10 @@
         settings: null,
         learning: { id: "main", vendorCategories: {}, corrections: {} },
         profile: { ...LOCAL_PROFILE },
-        googleClientId: localStorage.getItem("lifeledgerGoogleClientId") || "",
+        googleClientId: localStorage.getItem("lifeledgerGoogleClientId") || BUILT_IN_GOOGLE_CLIENT_ID,
         accessToken: "",
+        syncTimer: null,
+        syncing: false,
         selectedExpense: null,
         selectedNoteId: null,
         journalTimer: null
@@ -791,6 +856,10 @@
 
       function profileName() {
         return state.profile.type === "google" ? (state.profile.name || state.profile.email || "Google user") : "Local device";
+      }
+
+      function googleClientId() {
+        return (state.googleClientId || BUILT_IN_GOOGLE_CLIENT_ID || "").trim();
       }
 
       function defaultSettings(profileId = activeProfileId()) {
@@ -890,7 +959,7 @@
 
       function applyTheme() {
         document.documentElement.dataset.theme = state.settings?.darkMode ? "dark" : "light";
-        document.querySelector("meta[name='theme-color']").setAttribute("content", state.settings?.darkMode ? "#181f2b" : "#3267ff");
+        document.querySelector("meta[name='theme-color']").setAttribute("content", state.settings?.darkMode ? "#07111f" : "#00a3ff");
       }
 
       function pageHead(route) {
@@ -1289,6 +1358,7 @@
         await loadState();
         state.selectedExpense = null;
         toast("Expense saved.");
+        queueCloudSync();
         render();
       }
 
@@ -1449,6 +1519,7 @@
           if (idx >= 0) state.notes[idx] = note;
           if ($("#autosaveStatus")) $("#autosaveStatus").textContent = "Autosaved";
           $("#noteList") && ($("#noteList").innerHTML = state.notes.map(item => noteCard(item, item.id === note.id)).join(""));
+          queueCloudSync();
         }, 500);
       }
 
@@ -1632,13 +1703,14 @@
       }
 
       async function requestGoogleToken() {
-        if (!state.googleClientId.trim()) {
-          throw new Error("Add your Google OAuth Client ID first.");
+        const clientId = googleClientId();
+        if (!clientId) {
+          throw new Error("Google sign-in needs the site owner's OAuth Client ID added once in Developer setup.");
         }
         await waitForGoogleIdentity();
         return new Promise((resolve, reject) => {
           const client = google.accounts.oauth2.initTokenClient({
-            client_id: state.googleClientId.trim(),
+            client_id: clientId,
             scope: GOOGLE_SCOPES,
             callback: response => {
               if (response.error) reject(new Error(response.error_description || response.error));
@@ -1691,6 +1763,9 @@
         state.selectedNoteId = null;
         state.selectedExpense = null;
         await loadState();
+        state.settings.driveSync.enabled = true;
+        await saveSettings({ driveSync: state.settings.driveSync }, false);
+        await syncFromDriveAfterSignIn();
         toast(`Signed in as ${state.profile.email || state.profile.name}.`);
         render();
       }
@@ -1730,33 +1805,39 @@
         return (data.files || [])[0] || null;
       }
 
-      async function backupToDrive() {
+      async function backupToDrive(options = {}) {
         if (state.profile.type !== "google") throw new Error("Sign in with Google before using Drive backup.");
-        const existing = await findDriveBackupFile();
-        const payload = JSON.stringify(profilePayload(), null, 2);
-        if (existing) {
-          await googleFetch(`https://www.googleapis.com/upload/drive/v3/files/${existing.id}?uploadType=media&fields=id,name,modifiedTime`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: payload
-          });
-          state.settings.driveSync.driveFileId = existing.id;
-        } else {
-          const boundary = "lifeledger-" + Date.now();
-          const metadata = JSON.stringify({ name: DRIVE_FILE_NAME, parents: ["appDataFolder"] });
-          const body = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${payload}\r\n--${boundary}--`;
-          const created = await googleFetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,modifiedTime", {
-            method: "POST",
-            headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
-            body
-          }).then(res => res.json());
-          state.settings.driveSync.driveFileId = created.id;
+        if (state.syncing) return;
+        state.syncing = true;
+        try {
+          const existing = await findDriveBackupFile();
+          const payload = JSON.stringify(profilePayload(), null, 2);
+          if (existing) {
+            await googleFetch(`https://www.googleapis.com/upload/drive/v3/files/${existing.id}?uploadType=media&fields=id,name,modifiedTime`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: payload
+            });
+            state.settings.driveSync.driveFileId = existing.id;
+          } else {
+            const boundary = "lifeledger-" + Date.now();
+            const metadata = JSON.stringify({ name: DRIVE_FILE_NAME, parents: ["appDataFolder"] });
+            const body = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${payload}\r\n--${boundary}--`;
+            const created = await googleFetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,modifiedTime", {
+              method: "POST",
+              headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
+              body
+            }).then(res => res.json());
+            state.settings.driveSync.driveFileId = created.id;
+          }
+          state.settings.driveSync.enabled = true;
+          state.settings.driveSync.lastCloudSync = new Date().toLocaleString();
+          await saveSettings({ driveSync: state.settings.driveSync }, false);
+          if (!options.quiet) toast("Synced this Google profile to Drive.");
+          if (!options.skipRender) render();
+        } finally {
+          state.syncing = false;
         }
-        state.settings.driveSync.enabled = true;
-        state.settings.driveSync.lastCloudSync = new Date().toLocaleString();
-        await saveSettings({ driveSync: state.settings.driveSync });
-        toast("Backed up this Google profile to Drive.");
-        render();
       }
 
       async function restoreFromDrive() {
@@ -1769,9 +1850,35 @@
         state.settings.driveSync.enabled = true;
         state.settings.driveSync.driveFileId = existing.id;
         state.settings.driveSync.lastCloudSync = new Date().toLocaleString();
-        await saveSettings({ driveSync: state.settings.driveSync });
+        await saveSettings({ driveSync: state.settings.driveSync }, false);
         toast("Restored this Google profile from Drive.");
         render();
+      }
+
+      async function syncFromDriveAfterSignIn() {
+        try {
+          const existing = await findDriveBackupFile();
+          if (existing) {
+            const response = await googleFetch(`https://www.googleapis.com/drive/v3/files/${existing.id}?alt=media`);
+            const payload = await response.json();
+            await importPayload(payload, "merge");
+            state.settings.driveSync.driveFileId = existing.id;
+            state.settings.driveSync.enabled = true;
+            state.settings.driveSync.lastCloudSync = new Date().toLocaleString();
+            await saveSettings({ driveSync: state.settings.driveSync }, false);
+          }
+          await backupToDrive({ quiet: true, skipRender: true });
+        } catch (err) {
+          toast("Signed in, but Drive sync needs attention: " + err.message);
+        }
+      }
+
+      function queueCloudSync() {
+        if (state.profile.type !== "google" || !state.accessToken || !state.settings?.driveSync?.enabled) return;
+        clearTimeout(state.syncTimer);
+        state.syncTimer = setTimeout(() => {
+          backupToDrive({ quiet: true, skipRender: true }).catch(err => toast("Auto-sync failed: " + err.message));
+        }, 1200);
       }
 
       function renderSettings() {
@@ -1784,8 +1891,8 @@
         return html`
           ${pageHead("settings")}
           <div class="settings-grid">
-            <section class="panel">
-              <h3>Account and Data Privacy</h3>
+            <section class="panel auth-card">
+              <h3>Your LifeLedger Account</h3>
               <div class="account-card">
                 <div class="avatar">${state.profile.picture ? `<img src="${escapeHTML(state.profile.picture)}" alt="">` : profileInitials()}</div>
                 <div>
@@ -1793,15 +1900,19 @@
                   <div class="muted">${state.profile.type === "google" ? escapeHTML(state.profile.email || "Google account workspace") : "Unsigned users save only on this device."}</div>
                 </div>
               </div>
-              <label style="margin-top:14px">Google OAuth Client ID
-                <input id="googleClientId" value="${escapeHTML(state.googleClientId)}" placeholder="1234567890-abc.apps.googleusercontent.com">
-              </label>
-              <p class="muted">Create a Web OAuth Client ID in Google Cloud and add this Pages origin: https://sanjeevan11.github.io</p>
-              <div class="toolbar" style="margin-top:12px">
-                <button class="btn primary" id="googleSignInBtn">Sign in with Google</button>
+              <p>Sign in once and LifeLedger switches to a private Google profile. Your local-device data stays separate.</p>
+              <div class="auth-actions">
+                <button class="btn google" id="googleSignInBtn"><span class="google-mark">G</span> Continue with Google</button>
                 <button class="btn" id="localProfileBtn">Use local device</button>
               </div>
-              <p class="muted">Google profile data is stored in a separate local namespace. The access token is kept only for this browser session.</p>
+              <p class="muted">When Google is connected, LifeLedger syncs this profile to your private Google Drive app data while the session is active.</p>
+              <details class="dev-setup">
+                <summary>Developer OAuth setup</summary>
+                <label style="margin-top:12px">Google OAuth Client ID
+                  <input id="googleClientId" value="${escapeHTML(state.googleClientId)}" placeholder="1234567890-abc.apps.googleusercontent.com">
+                </label>
+                <p class="muted">Google requires a Web OAuth Client ID for any website sign-in. Add this Pages origin in Google Cloud: https://sanjeevan11.github.io</p>
+              </details>
             </section>
             <section class="panel">
               <h3>Preferences</h3>
@@ -1844,30 +1955,26 @@
               <p class="muted">The app registers a service worker at the current project path, so it works under URLs like <code>/repo-name/</code>.</p>
             </section>
             <section class="panel">
-              <h3>Google Drive Backup</h3>
+              <h3>Google Drive Sync</h3>
               <div class="toggle-row">
-                <div><strong>Drive backup</strong><div class="muted">Uses this Google account's hidden app data folder.</div></div>
+                <div><strong>Auto-sync profile</strong><div class="muted">Uses this Google account's hidden app data folder.</div></div>
                 <button class="btn" id="driveSyncBtn">${state.settings.driveSync.enabled ? "On" : "Off"}</button>
               </div>
-              <label style="margin-top:14px">Backup label
-                <input id="driveFolder" value="${escapeHTML(state.settings.driveSync.folderName || "LifeLedger")}">
-              </label>
               <div class="toolbar" style="margin-top:12px">
-                <button class="btn primary" id="driveBackupBtn">Back up to Drive</button>
+                <button class="btn primary" id="driveBackupBtn">Sync now</button>
                 <button class="btn" id="driveRestoreBtn">Restore from Drive</button>
               </div>
-              <button class="btn small" id="markSyncBtn" style="margin-top:12px">Mark manual sync now</button>
-              <p class="muted">Last manual mark: ${state.settings.driveSync.lastManualSync || "Never"}</p>
               <p class="muted">Last cloud backup/restore: ${state.settings.driveSync.lastCloudSync || "Never"}</p>
             </section>
           </div>
         `;
       }
 
-      async function saveSettings(partial = {}) {
+      async function saveSettings(partial = {}, sync = true) {
         state.settings = { ...defaultSettings(), ...state.settings, ...partial, id: settingsId(), profileId: activeProfileId() };
         await putOne("settings", state.settings);
         applyTheme();
+        if (sync) queueCloudSync();
       }
 
       async function exportData() {
@@ -1908,6 +2015,7 @@
         const payload = JSON.parse(text);
         await importPayload(payload, mode);
         toast(`Import ${mode} complete.`);
+        queueCloudSync();
         render();
       }
 
@@ -1916,6 +2024,7 @@
         await clearActiveProfileData();
         await loadState();
         toast("Profile data deleted.");
+        queueCloudSync();
         render();
       }
 
@@ -1984,6 +2093,7 @@
           await deleteOne("expenses", btn.dataset.deleteExpense);
           await loadState();
           toast("Expense deleted.");
+          queueCloudSync();
           render();
         }));
       }
@@ -2032,6 +2142,7 @@
           await putOne("notes", note);
           await loadState();
           state.selectedNoteId = note.id;
+          queueCloudSync();
           render();
         });
         $$("[data-open-note]").forEach(btn => btn.addEventListener("click", () => {
@@ -2047,6 +2158,7 @@
           await putOne("notes", note);
           await loadState();
           state.selectedNoteId = note.id;
+          queueCloudSync();
           render();
         }));
         $$("[data-block-type]").forEach(sel => sel.addEventListener("change", async () => {
@@ -2071,6 +2183,7 @@
           await deleteOne("notes", event.target.dataset.deleteNote);
           await loadState();
           state.selectedNoteId = state.notes[0]?.id || null;
+          queueCloudSync();
           render();
         });
       }
@@ -2139,16 +2252,6 @@
           } catch (err) {
             toast("Drive restore failed: " + err.message);
           }
-        });
-        $("#driveFolder")?.addEventListener("change", async event => {
-          state.settings.driveSync.folderName = event.target.value.trim() || "LifeLedger";
-          await saveSettings({ driveSync: state.settings.driveSync });
-          toast("Sync preference saved.");
-        });
-        $("#markSyncBtn")?.addEventListener("click", async () => {
-          state.settings.driveSync.lastManualSync = new Date().toLocaleString();
-          await saveSettings({ driveSync: state.settings.driveSync });
-          render();
         });
       }
 
